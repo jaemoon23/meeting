@@ -1,0 +1,8 @@
+{
+  "rules": {
+    "meetings": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    }
+  }
+}
