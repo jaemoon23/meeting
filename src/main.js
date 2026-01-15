@@ -5,8 +5,10 @@ import { initAuthListener, setAuthStateCallback } from './services/auth-service.
 import { setupMeetingsListener, setMeetingsCallback, getMeetingById, getMeetings } from './services/meeting-service.js'
 import { loadCategories, updateCategoriesFromMeetings, setCategoryChangeCallback } from './services/category-service.js'
 import { loadTemplates } from './services/template-service.js'
+import { setupPresence, removePresence, setPresenceCallback } from './services/presence-service.js'
 
 import { showAuthScreen, showAppScreen, setupAuthUI } from './ui/auth-ui.js'
+import { renderOnlineUsers } from './ui/presence-ui.js'
 import {
     renderCategoryTabs,
     renderMeetingList,
@@ -93,12 +95,19 @@ function initApp() {
         }
     })
 
+    // Presence 콜백 설정
+    setPresenceCallback((onlineUsers) => {
+        renderOnlineUsers(onlineUsers)
+    })
+
     // 인증 상태 변경 콜백
     setAuthStateCallback((user) => {
         if (user) {
             showAppScreen(user)
             setupMeetingsListener()
+            setupPresence(user)
         } else {
+            removePresence()
             showAuthScreen()
             hideLoading()
         }

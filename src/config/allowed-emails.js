@@ -3,6 +3,7 @@
 export const allowedEmails = [
     '990914s@gmail.com',
     'sgntm1029@gmail.com',
+    'dlcoqls002@gmail.com',
 ]
 
 export function isEmailAllowed(email) {
