@@ -2,8 +2,7 @@
 // 여기에 있는 이메일만 로그인 가능
 export const allowedEmails = [
     '990914s@gmail.com',
-    // 추가할 이메일을 아래에 작성
-    // 'example@gmail.com',
+    'sgntm1029@gmail.com',
 ]
 
 export function isEmailAllowed(email) {
