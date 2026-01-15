@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 회의록 관리</title>
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">로딩 중...</div>
+    </div>
+
+    <!-- 접근 거부 화면 -->
+    <div class="access-denied" id="accessDenied" style="display: none;">
+        <div class="access-denied-box">
+            <div class="access-denied-icon">🚫</div>
+            <h1>접근 권한 없음</h1>
+            <p>관리자만 접근할 수 있는 페이지입니다.</p>
+            <a href="/meeting/" class="btn btn-primary">메인으로 돌아가기</a>
+        </div>
+    </div>
+
+    <!-- 관리자 대시보드 -->
+    <div class="admin-container" id="adminContainer" style="display: none;">
+        <header class="admin-header">
+            <div class="admin-header-left">
+                <h1>👑 관리자 대시보드</h1>
+            </div>
+            <div class="admin-header-right">
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <a href="/meeting/" class="btn">← 메인으로</a>
+                <button class="btn btn-danger" id="logoutBtn">로그아웃</button>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <!-- 사이드바 네비게이션 -->
+            <nav class="admin-sidebar">
+                <button class="admin-nav-item active" data-section="users">
+                    <span>👥</span> 사용자 관리
+                </button>
+                <button class="admin-nav-item" data-section="permissions">
+                    <span>🔐</span> 권한 관리
+                </button>
+                <button class="admin-nav-item" data-section="discord">
+                    <span>💬</span> Discord 설정
+                </button>
+                <button class="admin-nav-item" data-section="settings">
+                    <span>⚙️</span> 시스템 설정
+                </button>
+            </nav>
+
+            <!-- 콘텐츠 영역 -->
+            <div class="admin-content">
+                <!-- 사용자 관리 섹션 -->
+                <section class="admin-section" id="section-users">
+                    <div class="section-header">
+                        <h2>사용자 관리</h2>
+                        <p>허용된 이메일 목록을 관리합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="add-user-form">
+                            <input type="email" class="admin-input" id="newUserEmail" placeholder="새 사용자 이메일">
+                            <button class="btn btn-primary" id="addUserBtn">추가</button>
+                        </div>
+                        <div class="user-list" id="userList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 권한 관리 섹션 -->
+                <section class="admin-section" id="section-permissions" style="display: none;">
+                    <div class="section-header">
+                        <h2>권한 관리</h2>
+                        <p>사용자별 관리자 권한을 설정합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="permission-list" id="permissionList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Discord 설정 섹션 -->
+                <section class="admin-section" id="section-discord" style="display: none;">
+                    <div class="section-header">
+                        <h2>Discord 설정</h2>
+                        <p>Discord 웹훅 및 사용자 ID 매핑을 관리합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="discord-webhook-form">
+                            <label>Discord 웹훅 URL</label>
+                            <input type="url" class="admin-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
+                            <button class="btn btn-primary" id="saveWebhookBtn">저장</button>
+                        </div>
+                        <div class="discord-mapping-list" id="discordMappingList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 시스템 설정 섹션 -->
+                <section class="admin-section" id="section-settings" style="display: none;">
+                    <div class="section-header">
+                        <h2>시스템 설정</h2>
+                        <p>앱 전반적인 설정을 관리합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">앱 버전</div>
+                                <div class="setting-value">1.0.0</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">슈퍼 관리자</div>
+                                <div class="setting-value">990914s@gmail.com</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script type="module" src="/src/admin.js"></script>
+</body>
+</html>

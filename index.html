@@ -46,6 +46,12 @@
                 <button class="btn" onclick="window.appFunctions.showUploadModal()">
                     <span>📤</span> 업로드
                 </button>
+                <button class="btn" onclick="window.appFunctions.showDiscordSettingsModal()">
+                    <span>⚙️</span> Discord
+                </button>
+                <a href="/meeting/admin.html" class="btn btn-admin" id="adminBtn" style="display: none;">
+                    <span>👑</span> 관리
+                </a>
                 <button class="btn btn-primary" onclick="window.appFunctions.createNewMeeting()">
                     <span>➕</span> 새 회의록
                 </button>
@@ -234,6 +240,19 @@
 
             <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid #30363d; padding-top: 16px;">
                 <button class="btn" id="templateModalCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discord 설정 모달 -->
+    <div class="modal-overlay" id="discordSettingsModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-title">Discord 알림 설정</div>
+            <div id="discordSettingsContent">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid #30363d; padding-top: 16px;">
+                <button class="btn" id="discordSettingsModalCloseBtn">닫기</button>
             </div>
         </div>
     </div>

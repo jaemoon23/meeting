@@ -11,9 +11,17 @@ import {
     updateTemplate,
     deleteTemplate
 } from '../services/template-service.js'
+import {
+    getDiscordMappings,
+    saveMyDiscordId,
+    saveDiscordIdForUser,
+    getAllUsersWithMapping
+} from '../services/discord-mapping-service.js'
 import { getCurrentMeetingId, setCurrentMeetingId } from './meeting-list.js'
 import { showContentView } from './editor.js'
 import { getMeetingById } from '../services/meeting-service.js'
+import { getCurrentUser } from '../services/auth-service.js'
+import { isAdmin } from '../config/admin.js'
 
 let selectedNewCategory = '미분류'
 let selectedChangeCategory = ''
@@ -400,6 +408,186 @@ export async function processFile(file) {
     reader.readAsText(file)
 }
 
+// Discord Settings Modal
+export function showDiscordSettingsModal() {
+    document.getElementById('discordSettingsModal').classList.add('show')
+    renderDiscordSettings()
+}
+
+export function hideDiscordSettingsModal() {
+    document.getElementById('discordSettingsModal').classList.remove('show')
+}
+
+function renderDiscordSettings() {
+    const user = getCurrentUser()
+    if (!user) return
+
+    const userIsAdmin = isAdmin(user.email)
+    const container = document.getElementById('discordSettingsContent')
+    const mappings = getDiscordMappings()
+
+    // 내 Discord ID 정보
+    const myMapping = mappings[user.uid] || {}
+
+    let html = `
+        <div class="discord-section">
+            <div class="discord-section-header">내 Discord 설정</div>
+            <div class="discord-my-settings">
+                <div class="discord-input-group">
+                    <label>Discord ID</label>
+                    <input type="text" class="modal-input" id="myDiscordId"
+                           value="${escapeHtml(myMapping.discordId || '')}"
+                           placeholder="123456789012345678">
+                    <div class="discord-input-hint">Discord 설정 → 고급 → 개발자 모드 ON → 프로필 우클릭 → ID 복사</div>
+                </div>
+                <div class="discord-input-group">
+                    <label>Discord 닉네임 (선택)</label>
+                    <input type="text" class="modal-input" id="myDiscordName"
+                           value="${escapeHtml(myMapping.discordName || '')}"
+                           placeholder="홍길동#1234">
+                </div>
+                <button class="btn btn-primary" id="saveMyDiscordBtn">💾 저장</button>
+            </div>
+        </div>
+    `
+
+    // 관리자 전용: 전체 사용자 관리
+    if (userIsAdmin) {
+        const allUsers = getAllUsersWithMapping()
+        const registeredUsers = allUsers.filter(u => u.discordId)
+        const unregisteredUsers = allUsers.filter(u => !u.discordId)
+
+        html += `
+            <div class="discord-section" style="margin-top: 24px;">
+                <div class="discord-section-header">👑 관리자: 전체 사용자 Discord ID 관리</div>
+        `
+
+        // 미등록 사용자
+        if (unregisteredUsers.length > 0) {
+            html += `
+                <div class="discord-subsection">
+                    <div class="discord-subsection-header" style="color: #f85149;">
+                        ⚠️ 미등록 사용자 (${unregisteredUsers.length}명)
+                    </div>
+                    <div class="discord-user-list">
+            `
+            for (const u of unregisteredUsers) {
+                html += renderAdminUserItem(u)
+            }
+            html += `
+                    </div>
+                </div>
+            `
+        }
+
+        // 등록된 사용자
+        if (registeredUsers.length > 0) {
+            html += `
+                <div class="discord-subsection">
+                    <div class="discord-subsection-header" style="color: #238636;">
+                        ✅ 등록 완료 (${registeredUsers.length}명)
+                    </div>
+                    <div class="discord-user-list">
+            `
+            for (const u of registeredUsers) {
+                html += renderAdminUserItem(u)
+            }
+            html += `
+                    </div>
+                </div>
+            `
+        }
+
+        html += `</div>`
+    }
+
+    container.innerHTML = html
+
+    // 내 Discord ID 저장 버튼
+    document.getElementById('saveMyDiscordBtn')?.addEventListener('click', async () => {
+        const discordId = document.getElementById('myDiscordId').value.trim()
+        const discordName = document.getElementById('myDiscordName').value.trim()
+
+        if (!discordId) {
+            alert('Discord ID를 입력해주세요.')
+            return
+        }
+
+        if (!/^\d{17,19}$/.test(discordId)) {
+            alert('Discord ID는 17-19자리 숫자입니다.')
+            return
+        }
+
+        try {
+            await saveMyDiscordId(discordId, discordName)
+            alert('저장되었습니다!')
+            renderDiscordSettings()
+        } catch (error) {
+            alert('저장에 실패했습니다.')
+        }
+    })
+
+    // 관리자: 각 사용자 저장 버튼
+    if (userIsAdmin) {
+        document.querySelectorAll('.admin-save-discord-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const uid = btn.dataset.uid
+                const email = btn.dataset.email
+                const displayName = btn.dataset.displayname || ''
+                const row = btn.closest('.discord-user-item')
+                const discordId = row.querySelector('.admin-discord-id').value.trim()
+                const discordName = row.querySelector('.admin-discord-name').value.trim()
+
+                if (!discordId) {
+                    alert('Discord ID를 입력해주세요.')
+                    return
+                }
+
+                if (!/^\d{17,19}$/.test(discordId)) {
+                    alert('Discord ID는 17-19자리 숫자입니다.')
+                    return
+                }
+
+                // uid가 없는 경우 (아직 로그인 안 한 사용자) - email 기반으로 임시 uid 생성
+                const finalUid = uid || `pending_${email.replace(/[^a-zA-Z0-9]/g, '_')}`
+
+                try {
+                    await saveDiscordIdForUser(finalUid, email, displayName, discordId, discordName)
+                    alert('저장되었습니다!')
+                    renderDiscordSettings()
+                } catch (error) {
+                    alert('저장에 실패했습니다.')
+                }
+            })
+        })
+    }
+}
+
+function renderAdminUserItem(user) {
+    return `
+        <div class="discord-user-item">
+            <div class="discord-user-info">
+                <span class="discord-user-email">${escapeHtml(user.email)}</span>
+                ${user.displayName ? `<span class="discord-user-name">(${escapeHtml(user.displayName)})</span>` : ''}
+            </div>
+            <div class="discord-user-inputs">
+                <input type="text" class="modal-input admin-discord-id"
+                       value="${escapeHtml(user.discordId || '')}"
+                       placeholder="Discord ID">
+                <input type="text" class="modal-input admin-discord-name"
+                       value="${escapeHtml(user.discordName || '')}"
+                       placeholder="닉네임">
+                <button class="btn btn-primary admin-save-discord-btn"
+                        data-uid="${user.uid || ''}"
+                        data-email="${escapeHtml(user.email)}"
+                        data-displayname="${escapeHtml(user.displayName || '')}">
+                    저장
+                </button>
+            </div>
+        </div>
+    `
+}
+
 // Setup all modals
 export function setupModals() {
     // Upload Modal
@@ -521,4 +709,16 @@ export function setupModals() {
     document.getElementById('templateModal').addEventListener('click', (e) => {
         if (e.target.id === 'templateModal') hideTemplateModal()
     })
+
+    // Discord Settings Modal
+    const discordSettingsModalCloseBtn = document.getElementById('discordSettingsModalCloseBtn')
+    if (discordSettingsModalCloseBtn) {
+        discordSettingsModalCloseBtn.addEventListener('click', hideDiscordSettingsModal)
+    }
+    const discordSettingsModal = document.getElementById('discordSettingsModal')
+    if (discordSettingsModal) {
+        discordSettingsModal.addEventListener('click', (e) => {
+            if (e.target.id === 'discordSettingsModal') hideDiscordSettingsModal()
+        })
+    }
 }

@@ -17,6 +17,14 @@
         ".read": "auth != null && auth.uid == $uid",
         ".write": "auth != null && auth.uid == $uid"
       }
+    },
+    "discordMapping": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "adminConfig": {
+      ".read": "auth != null",
+      ".write": "auth != null && auth.token.email == '990914s@gmail.com'"
     }
   }
 }

@@ -6,6 +6,7 @@ import { setupMeetingsListener, setMeetingsCallback, getMeetingById, getMeetings
 import { loadCategories, updateCategoriesFromMeetings, setCategoryChangeCallback } from './services/category-service.js'
 import { loadTemplates, setupTemplatesListener } from './services/template-service.js'
 import { setupPresence, removePresence, setPresenceCallback } from './services/presence-service.js'
+import { setupDiscordMappingListener, removeDiscordMappingListener } from './services/discord-mapping-service.js'
 
 import { showAuthScreen, showAppScreen, setupAuthUI } from './ui/auth-ui.js'
 import { renderOnlineUsers } from './ui/presence-ui.js'
@@ -24,7 +25,8 @@ import {
     showCategoryModal,
     showTemplateModal,
     showUploadModal,
-    showNewMeetingModal
+    showNewMeetingModal,
+    showDiscordSettingsModal
 } from './ui/modals.js'
 
 // 전역 함수 노출 (HTML onclick 이벤트용)
@@ -32,6 +34,7 @@ window.appFunctions = {
     showCategoryModal,
     showTemplateModal,
     showUploadModal,
+    showDiscordSettingsModal,
     createNewMeeting: showNewMeetingModal
 }
 
@@ -107,8 +110,10 @@ function initApp() {
             setupMeetingsListener()
             setupTemplatesListener()
             setupPresence(user)
+            setupDiscordMappingListener()
         } else {
             removePresence()
+            removeDiscordMappingListener()
             showAuthScreen()
             hideLoading()
         }

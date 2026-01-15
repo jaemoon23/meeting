@@ -1,4 +1,5 @@
 import { loginWithGoogle, logout } from '../services/auth-service.js'
+import { isAdmin } from '../config/admin.js'
 
 export function showAuthScreen() {
     document.getElementById('authContainer').style.display = 'flex'
@@ -12,6 +13,12 @@ export function showAppScreen(user) {
     if (user) {
         document.getElementById('userAvatar').src = user.photoURL || ''
         document.getElementById('userName').textContent = user.displayName || user.email
+
+        // 관리자 버튼 표시/숨김
+        const adminBtn = document.getElementById('adminBtn')
+        if (adminBtn) {
+            adminBtn.style.display = isAdmin(user.email) ? 'inline-flex' : 'none'
+        }
     }
 }
 
