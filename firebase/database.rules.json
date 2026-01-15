@@ -25,6 +25,10 @@
     "adminConfig": {
       ".read": "auth != null",
       ".write": "auth != null && auth.token.email == '990914s@gmail.com'"
+    },
+    "allowedEmails": {
+      ".read": true,
+      ".write": "auth != null && auth.token.email == '990914s@gmail.com'"
     }
   }
 }

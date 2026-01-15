@@ -2,17 +2,23 @@ import './styles/admin.css'
 
 import { initAuthListener, setAuthStateCallback, getCurrentUser, logout } from './services/auth-service.js'
 import { isAdmin } from './config/admin.js'
-import { allowedEmails } from './config/allowed-emails.js'
+import {
+    setupAllowedEmailsListener,
+    removeAllowedEmailsListener,
+    setAllowedEmailsCallback,
+    getAllowedEmails,
+    addAllowedEmail,
+    removeAllowedEmail
+} from './services/allowed-emails-service.js'
 import {
     setupDiscordMappingListener,
     removeDiscordMappingListener,
-    getDiscordMappings,
     setDiscordMappingCallback,
     saveDiscordIdForUser,
     getAllUsersWithMapping
 } from './services/discord-mapping-service.js'
 import { db } from './lib/firebase.js'
-import { ref, set, get, onValue, off } from 'firebase/database'
+import { ref, set, onValue, off } from 'firebase/database'
 
 let currentSection = 'users'
 let adminConfigRef = null
@@ -99,12 +105,13 @@ function renderCurrentSection() {
 function renderUserList() {
     const container = document.getElementById('userList')
     const currentUser = getCurrentUser()
+    const allowedEmails = getAllowedEmails()
 
     let html = '<div class="list-header">등록된 사용자 (' + allowedEmails.length + '명)</div>'
 
     allowedEmails.forEach(email => {
         const isOwner = email === '990914s@gmail.com'
-        const isSelf = email === currentUser?.email
+        const isSelf = email === currentUser?.email?.toLowerCase()
 
         html += `
             <div class="user-item">
@@ -120,20 +127,29 @@ function renderUserList() {
         `
     })
 
-    html += `
-        <div class="info-box" style="margin-top: 16px;">
-            <strong>참고:</strong> 사용자 추가/삭제는 현재 코드 수정이 필요합니다.<br>
-            <code>src/config/allowed-emails.js</code> 파일을 직접 수정해주세요.
-        </div>
-    `
-
     container.innerHTML = html
+
+    // 삭제 버튼 이벤트
+    container.querySelectorAll('.remove-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const email = btn.dataset.email
+            if (confirm(`정말 ${email} 사용자를 삭제하시겠습니까?`)) {
+                try {
+                    await removeAllowedEmail(email)
+                    alert('삭제되었습니다.')
+                } catch (error) {
+                    alert('삭제에 실패했습니다.')
+                }
+            }
+        })
+    })
 }
 
 // 권한 목록 렌더링
 function renderPermissionList() {
     const container = document.getElementById('permissionList')
     const admins = adminConfig.admins || {}
+    const allowedEmails = getAllowedEmails()
 
     let html = '<div class="list-header">권한 설정</div>'
 
@@ -268,6 +284,38 @@ async function saveWebhookUrl() {
     }
 }
 
+// 사용자 추가 핸들러
+async function handleAddUser() {
+    const input = document.getElementById('newUserEmail')
+    const email = input.value.trim().toLowerCase()
+
+    if (!email) {
+        alert('이메일을 입력해주세요.')
+        return
+    }
+
+    // 이메일 형식 검증
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        alert('올바른 이메일 형식이 아닙니다.')
+        return
+    }
+
+    // 이미 등록된 이메일인지 확인
+    const allowedEmails = getAllowedEmails()
+    if (allowedEmails.includes(email)) {
+        alert('이미 등록된 이메일입니다.')
+        return
+    }
+
+    try {
+        await addAllowedEmail(email)
+        input.value = ''
+        alert('사용자가 추가되었습니다.')
+    } catch (error) {
+        alert('추가에 실패했습니다.')
+    }
+}
+
 // 앱 초기화
 function initAdmin() {
     showLoading()
@@ -279,7 +327,16 @@ function initAdmin() {
             if (isAdmin(user.email)) {
                 showAdminScreen(user)
                 setupAdminConfigListener()
+                setupAllowedEmailsListener()
                 setupDiscordMappingListener()
+
+                // 허용 이메일 목록 변경 시 리렌더링
+                setAllowedEmailsCallback(() => {
+                    if (currentSection === 'users' || currentSection === 'permissions') {
+                        renderCurrentSection()
+                    }
+                })
+
                 setDiscordMappingCallback(() => {
                     if (currentSection === 'discord') {
                         renderDiscordSection()
@@ -307,12 +364,23 @@ function initAdmin() {
     // 로그아웃 버튼
     document.getElementById('logoutBtn')?.addEventListener('click', async () => {
         removeAdminConfigListener()
+        removeAllowedEmailsListener()
         removeDiscordMappingListener()
         await logout()
     })
 
     // 웹훅 저장 버튼
     document.getElementById('saveWebhookBtn')?.addEventListener('click', saveWebhookUrl)
+
+    // 사용자 추가 버튼
+    document.getElementById('addUserBtn')?.addEventListener('click', handleAddUser)
+
+    // Enter 키로 사용자 추가
+    document.getElementById('newUserEmail')?.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleAddUser()
+        }
+    })
 }
 
 document.addEventListener('DOMContentLoaded', initAdmin)

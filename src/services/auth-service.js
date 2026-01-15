@@ -1,6 +1,6 @@
 import { auth, googleProvider } from '../lib/firebase.js'
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth'
-import { isEmailAllowed } from '../config/allowed-emails.js'
+import { checkEmailAllowed } from './allowed-emails-service.js'
 
 let currentUser = null
 let authStateCallback = null
@@ -15,15 +15,19 @@ export function setAuthStateCallback(callback) {
 
 export function initAuthListener() {
     onAuthStateChanged(auth, async (user) => {
-        if (user && !isEmailAllowed(user.email)) {
-            // 허용되지 않은 이메일이면 로그아웃
-            await signOut(auth)
-            alert('접근 권한이 없습니다. 관리자에게 문의하세요.')
-            currentUser = null
-            if (authStateCallback) {
-                authStateCallback(null)
+        if (user) {
+            // Firebase에서 허용 여부 확인
+            const isAllowed = await checkEmailAllowed(user.email)
+            if (!isAllowed) {
+                // 허용되지 않은 이메일이면 로그아웃
+                await signOut(auth)
+                alert('접근 권한이 없습니다. 관리자에게 문의하세요.')
+                currentUser = null
+                if (authStateCallback) {
+                    authStateCallback(null)
+                }
+                return
             }
-            return
         }
 
         currentUser = user

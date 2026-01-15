@@ -1,7 +1,7 @@
 import { db } from '../lib/firebase.js'
 import { ref, set, onValue, off, get } from 'firebase/database'
 import { getCurrentUser } from './auth-service.js'
-import { allowedEmails } from '../config/allowed-emails.js'
+import { getAllowedEmails } from './allowed-emails-service.js'
 
 let discordMappingRef = null
 let discordMappings = {}
@@ -80,12 +80,14 @@ export async function saveDiscordIdForUser(uid, email, displayName, discordId, d
 
 // 등록되지 않은 사용자 목록 가져오기 (관리자용)
 export function getUnregisteredUsers() {
+    const allowedEmails = getAllowedEmails()
     const registeredEmails = Object.values(discordMappings).map(m => m.email)
     return allowedEmails.filter(email => !registeredEmails.includes(email))
 }
 
 // 모든 사용자 목록 가져오기 (관리자용)
 export function getAllUsersWithMapping() {
+    const allowedEmails = getAllowedEmails()
     const result = []
 
     // 등록된 사용자
@@ -100,7 +102,7 @@ export function getAllUsersWithMapping() {
         })
     }
 
-    // 미등록 사용자 (allowed-emails에는 있지만 mapping이 없는)
+    // 미등록 사용자 (allowedEmails에는 있지만 mapping이 없는)
     const registeredEmails = result.map(u => u.email)
     for (const email of allowedEmails) {
         if (!registeredEmails.includes(email)) {
