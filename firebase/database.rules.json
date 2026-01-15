@@ -7,6 +7,10 @@
     "presence": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "templates": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

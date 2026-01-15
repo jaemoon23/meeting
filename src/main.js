@@ -4,7 +4,7 @@ import { showLoading, hideLoading } from './utils/helpers.js'
 import { initAuthListener, setAuthStateCallback } from './services/auth-service.js'
 import { setupMeetingsListener, setMeetingsCallback, getMeetingById, getMeetings } from './services/meeting-service.js'
 import { loadCategories, updateCategoriesFromMeetings, setCategoryChangeCallback } from './services/category-service.js'
-import { loadTemplates } from './services/template-service.js'
+import { loadTemplates, setupTemplatesListener } from './services/template-service.js'
 import { setupPresence, removePresence, setPresenceCallback } from './services/presence-service.js'
 
 import { showAuthScreen, showAppScreen, setupAuthUI } from './ui/auth-ui.js'
@@ -105,6 +105,7 @@ function initApp() {
         if (user) {
             showAppScreen(user)
             setupMeetingsListener()
+            setupTemplatesListener()
             setupPresence(user)
         } else {
             removePresence()
