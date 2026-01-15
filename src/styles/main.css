@@ -924,6 +924,8 @@ h1 {
     font-weight: 600;
     color: #f0f6fc;
     margin-bottom: 8px;
+    text-align: center;
+    display: block;
 }
 
 .auth-subtitle {
