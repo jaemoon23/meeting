@@ -41,13 +41,13 @@
         <main class="admin-main">
             <!-- 사이드바 네비게이션 -->
             <nav class="admin-sidebar">
-                <button class="admin-nav-item active" data-section="users">
+                <button class="admin-nav-item" data-section="users">
                     <span>👥</span> 사용자 관리
                 </button>
                 <button class="admin-nav-item" data-section="permissions">
                     <span>🔐</span> 권한 관리
                 </button>
-                <button class="admin-nav-item" data-section="discord">
+                <button class="admin-nav-item active" data-section="discord">
                     <span>💬</span> Discord 설정
                 </button>
                 <button class="admin-nav-item" data-section="settings">
@@ -58,7 +58,7 @@
             <!-- 콘텐츠 영역 -->
             <div class="admin-content">
                 <!-- 사용자 관리 섹션 -->
-                <section class="admin-section" id="section-users">
+                <section class="admin-section" id="section-users" style="display: none;">
                     <div class="section-header">
                         <h2>사용자 관리</h2>
                         <p>허용된 이메일 목록을 관리합니다.</p>
@@ -88,13 +88,13 @@
                 </section>
 
                 <!-- Discord 설정 섹션 -->
-                <section class="admin-section" id="section-discord" style="display: none;">
+                <section class="admin-section" id="section-discord">
                     <div class="section-header">
                         <h2>Discord 설정</h2>
-                        <p>Discord 웹훅 및 사용자 ID 매핑을 관리합니다.</p>
+                        <p>자신의 Discord ID를 설정합니다.</p>
                     </div>
                     <div class="section-content">
-                        <div class="discord-webhook-form">
+                        <div class="discord-webhook-form" id="webhookSection">
                             <label>Discord 웹훅 URL</label>
                             <input type="url" class="admin-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
                             <button class="btn btn-primary" id="saveWebhookBtn">저장</button>

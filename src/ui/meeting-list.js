@@ -1,6 +1,7 @@
 import { escapeHtml, formatTime, groupByDate, sortDateGroups } from '../utils/helpers.js'
 import { getCategories, getFilteredMeetings } from '../services/category-service.js'
 import { deleteMeeting } from '../services/meeting-service.js'
+import { canDeleteMeetings } from '../services/permission-service.js'
 
 let currentMeetingId = null
 let currentFilter = '전체'
@@ -97,7 +98,7 @@ export function renderMeetingList() {
                                     ${meeting.category ? `<span class="meeting-item-category">${escapeHtml(meeting.category)}</span>` : ''}
                                 </div>
                             </div>
-                            <button class="meeting-item-delete" data-id="${meeting.id}">🗑️</button>
+                            ${canDeleteMeetings() ? `<button class="meeting-item-delete" data-id="${meeting.id}">🗑️</button>` : ''}
                         </li>
                     `).join('')}
                 </ul>
@@ -123,6 +124,13 @@ export function renderMeetingList() {
     container.querySelectorAll('.meeting-item-delete').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation()
+
+            // 권한 체크
+            if (!canDeleteMeetings()) {
+                alert('회의록 삭제 권한이 없습니다.')
+                return
+            }
+
             const id = btn.dataset.id
             if (confirm('정말 삭제하시겠습니까? 모든 팀원에게서 삭제됩니다.')) {
                 await deleteMeeting(id)

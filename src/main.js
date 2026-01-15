@@ -7,6 +7,7 @@ import { loadCategories, updateCategoriesFromMeetings, setCategoryChangeCallback
 import { loadTemplates, setupTemplatesListener } from './services/template-service.js'
 import { setupPresence, removePresence, setPresenceCallback } from './services/presence-service.js'
 import { setupDiscordMappingListener, removeDiscordMappingListener } from './services/discord-mapping-service.js'
+import { setupPermissionListener, removePermissionListener, setPermissionCallback } from './services/permission-service.js'
 
 import { showAuthScreen, showAppScreen, setupAuthUI } from './ui/auth-ui.js'
 import { renderOnlineUsers } from './ui/presence-ui.js'
@@ -111,9 +112,16 @@ function initApp() {
             setupTemplatesListener()
             setupPresence(user)
             setupDiscordMappingListener()
+            setupPermissionListener()
+
+            // 권한 변경 시 UI 업데이트 (삭제 버튼 표시/숨김)
+            setPermissionCallback(() => {
+                renderMeetingList()
+            })
         } else {
             removePresence()
             removeDiscordMappingListener()
+            removePermissionListener()
             showAuthScreen()
             hideLoading()
         }
