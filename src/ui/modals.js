@@ -18,6 +18,7 @@ import { getMeetingById } from '../services/meeting-service.js'
 let selectedNewCategory = '미분류'
 let selectedChangeCategory = ''
 let editingTemplateId = null
+let isNewTemplateShared = true
 let onMeetingCreatedCallback = null
 
 export function setOnMeetingCreatedCallback(callback) {
@@ -224,20 +225,23 @@ function renderTemplateList() {
         return
     }
 
-    list.innerHTML = templates.map(template => `
-        <div class="template-item ${template.id === currentTemplateId ? 'default' : ''}" data-id="${template.id}">
-            <div class="template-item-info">
-                <div class="template-item-name">${escapeHtml(template.name)}</div>
-                <div class="template-item-preview">${escapeHtml(template.content.substring(0, 80))}...</div>
-            </div>
-            <div class="template-item-actions">
-                ${template.id === currentTemplateId ? '<span class="template-item-badge">사용 중</span>' : ''}
-                <button class="template-item-btn set-default-btn" data-id="${template.id}">
-                    ${template.id === currentTemplateId ? '✓' : '기본으로 설정'}
-                </button>
-            </div>
-        </div>
-    `).join('')
+    // 공유 템플릿과 개인 템플릿 분리
+    const sharedTemplates = templates.filter(t => t.isShared)
+    const personalTemplates = templates.filter(t => !t.isShared)
+
+    let html = ''
+
+    if (sharedTemplates.length > 0) {
+        html += '<div class="template-section-header">🌐 공유 템플릿</div>'
+        html += sharedTemplates.map(template => renderTemplateItem(template, currentTemplateId)).join('')
+    }
+
+    if (personalTemplates.length > 0) {
+        html += '<div class="template-section-header" style="margin-top: 16px;">👤 내 템플릿</div>'
+        html += personalTemplates.map(template => renderTemplateItem(template, currentTemplateId)).join('')
+    }
+
+    list.innerHTML = html
 
     list.querySelectorAll('.template-item').forEach(item => {
         item.addEventListener('click', (e) => {
@@ -256,12 +260,48 @@ function renderTemplateList() {
     })
 }
 
+function renderTemplateItem(template, currentTemplateId) {
+    return `
+        <div class="template-item ${template.id === currentTemplateId ? 'default' : ''}" data-id="${template.id}">
+            <div class="template-item-info">
+                <div class="template-item-name">${escapeHtml(template.name)}</div>
+                <div class="template-item-preview">${escapeHtml(template.content.substring(0, 80))}...</div>
+            </div>
+            <div class="template-item-actions">
+                ${template.id === currentTemplateId ? '<span class="template-item-badge">사용 중</span>' : ''}
+                <button class="template-item-btn set-default-btn" data-id="${template.id}">
+                    ${template.id === currentTemplateId ? '✓' : '기본으로 설정'}
+                </button>
+            </div>
+        </div>
+    `
+}
+
 function createNewTemplate() {
     editingTemplateId = null
+    isNewTemplateShared = true
     document.getElementById('templateName').value = ''
     document.getElementById('templateEditor').value = getDefaultTemplate().content
     document.getElementById('deleteTemplateBtn').style.display = 'none'
+    updateShareToggle()
+    document.getElementById('templateShareToggle').style.display = 'flex'
     switchTemplateTab('edit')
+}
+
+function updateShareToggle() {
+    const toggle = document.getElementById('templateShareToggle')
+    if (!toggle) return
+    toggle.innerHTML = `
+        <span style="font-size: 13px; color: #8b949e;">저장 위치:</span>
+        <button type="button" class="share-toggle-btn ${isNewTemplateShared ? 'active' : ''}" data-shared="true">🌐 공유</button>
+        <button type="button" class="share-toggle-btn ${!isNewTemplateShared ? 'active' : ''}" data-shared="false">👤 개인</button>
+    `
+    toggle.querySelectorAll('.share-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            isNewTemplateShared = btn.dataset.shared === 'true'
+            updateShareToggle()
+        })
+    })
 }
 
 function editTemplate(id) {
@@ -272,11 +312,12 @@ function editTemplate(id) {
     editingTemplateId = id
     document.getElementById('templateName').value = template.name
     document.getElementById('templateEditor').value = template.content
-    document.getElementById('deleteTemplateBtn').style.display = 'block'
+    document.getElementById('deleteTemplateBtn').style.display = template.isDefault ? 'none' : 'block'
+    document.getElementById('templateShareToggle').style.display = 'none'
     switchTemplateTab('edit')
 }
 
-function saveTemplateHandler() {
+async function saveTemplateHandler() {
     const name = document.getElementById('templateName').value.trim()
     const content = document.getElementById('templateEditor').value
 
@@ -290,18 +331,21 @@ function saveTemplateHandler() {
         return
     }
 
-    if (editingTemplateId) {
-        updateTemplate(editingTemplateId, name, content)
-    } else {
-        createTemplate(name, content)
-    }
+    try {
+        if (editingTemplateId) {
+            await updateTemplate(editingTemplateId, name, content)
+        } else {
+            await createTemplate(name, content, isNewTemplateShared)
+        }
 
-    switchTemplateTab('list')
-    renderTemplateList()
-    alert('템플릿이 저장되었습니다!')
+        switchTemplateTab('list')
+        alert('템플릿이 저장되었습니다!')
+    } catch (error) {
+        alert('템플릿 저장에 실패했습니다.')
+    }
 }
 
-function deleteCurrentTemplate() {
+async function deleteCurrentTemplate() {
     if (!editingTemplateId) return
 
     if (editingTemplateId === 'default') {
@@ -311,9 +355,12 @@ function deleteCurrentTemplate() {
 
     if (!confirm('정말 이 템플릿을 삭제하시겠습니까?')) return
 
-    deleteTemplate(editingTemplateId)
-    switchTemplateTab('list')
-    renderTemplateList()
+    try {
+        await deleteTemplate(editingTemplateId)
+        switchTemplateTab('list')
+    } catch (error) {
+        alert('템플릿 삭제에 실패했습니다.')
+    }
 }
 
 function handleTemplateFileSelect(file) {

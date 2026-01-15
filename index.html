@@ -208,6 +208,9 @@
             <!-- 템플릿 편집 -->
             <div id="templateEditPane" class="template-pane" style="display: none;">
                 <input type="text" class="modal-input" id="templateName" placeholder="템플릿 이름">
+                <div id="templateShareToggle" class="template-share-toggle" style="display: none; gap: 8px; align-items: center; margin-bottom: 12px;">
+                    <!-- 동적으로 생성 -->
+                </div>
                 <textarea class="editor-textarea" id="templateEditor" style="min-height: 250px;" placeholder="마크다운 템플릿을 작성하세요..."></textarea>
                 <div class="template-hint">
                     💡 팁: <code>{{제목}}</code>을 사용하면 회의록 생성 시 입력한 제목으로 자동 치환됩니다.

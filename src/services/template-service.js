@@ -1,5 +1,6 @@
 import { db } from '../lib/firebase.js'
 import { ref, set, push, remove, onValue, off } from 'firebase/database'
+import { getCurrentUser } from './auth-service.js'
 
 const defaultTemplate = {
     id: 'default',
@@ -21,12 +22,14 @@ const defaultTemplate = {
 
 ## 📌 다음 단계
 `,
-    isDefault: true
+    isDefault: true,
+    isShared: true
 }
 
 let templates = [defaultTemplate]
 let currentTemplateId = 'default'
-let templatesRef = null
+let sharedTemplatesRef = null
+let userTemplatesRef = null
 let templateCallback = null
 
 export function setTemplateCallback(callback) {
@@ -47,44 +50,77 @@ export function setCurrentTemplateId(id) {
 }
 
 export function loadTemplates() {
-    // 로컬에서 현재 선택된 템플릿 ID 로드
     currentTemplateId = localStorage.getItem('currentTemplateId') || 'default'
 }
 
+let sharedTemplates = []
+let userTemplates = []
+
+function mergeTemplates() {
+    // 기본 템플릿 + 공유 템플릿 + 개인 템플릿
+    templates = [defaultTemplate, ...sharedTemplates, ...userTemplates]
+
+    // 현재 선택된 템플릿이 삭제되었으면 기본으로
+    if (!templates.find(t => t.id === currentTemplateId)) {
+        currentTemplateId = 'default'
+        localStorage.setItem('currentTemplateId', currentTemplateId)
+    }
+
+    if (templateCallback) {
+        templateCallback(templates)
+    }
+}
+
 export function setupTemplatesListener() {
-    templatesRef = ref(db, 'templates')
+    const user = getCurrentUser()
+    if (!user) return
 
-    onValue(templatesRef, (snapshot) => {
+    // 공유 템플릿 리스너
+    sharedTemplatesRef = ref(db, 'templates')
+    onValue(sharedTemplatesRef, (snapshot) => {
         const data = snapshot.val()
-
-        // 기본 템플릿은 항상 포함
-        templates = [defaultTemplate]
+        sharedTemplates = []
 
         if (data) {
-            const firebaseTemplates = Object.entries(data).map(([id, template]) => ({
+            sharedTemplates = Object.entries(data).map(([id, template]) => ({
                 id,
-                ...template
+                ...template,
+                isShared: true
             }))
-            templates = [defaultTemplate, ...firebaseTemplates]
         }
 
-        // 현재 선택된 템플릿이 삭제되었으면 기본으로
-        if (!templates.find(t => t.id === currentTemplateId)) {
-            currentTemplateId = 'default'
-            localStorage.setItem('currentTemplateId', currentTemplateId)
+        mergeTemplates()
+    })
+
+    // 개인 템플릿 리스너
+    userTemplatesRef = ref(db, `userTemplates/${user.uid}`)
+    onValue(userTemplatesRef, (snapshot) => {
+        const data = snapshot.val()
+        userTemplates = []
+
+        if (data) {
+            userTemplates = Object.entries(data).map(([id, template]) => ({
+                id,
+                ...template,
+                isShared: false
+            }))
         }
 
-        if (templateCallback) {
-            templateCallback(templates)
-        }
+        mergeTemplates()
     })
 }
 
 export function removeTemplatesListener() {
-    if (templatesRef) {
-        off(templatesRef)
-        templatesRef = null
+    if (sharedTemplatesRef) {
+        off(sharedTemplatesRef)
+        sharedTemplatesRef = null
     }
+    if (userTemplatesRef) {
+        off(userTemplatesRef)
+        userTemplatesRef = null
+    }
+    sharedTemplates = []
+    userTemplates = []
 }
 
 export function getCurrentTemplate() {
@@ -95,8 +131,12 @@ export function getTemplateById(id) {
     return templates.find(t => t.id === id)
 }
 
-export async function createTemplate(name, content) {
-    const templatesRef = ref(db, 'templates')
+export async function createTemplate(name, content, isShared = false) {
+    const user = getCurrentUser()
+    if (!user) return null
+
+    const basePath = isShared ? 'templates' : `userTemplates/${user.uid}`
+    const templatesRef = ref(db, basePath)
     const newTemplateRef = push(templatesRef)
 
     await set(newTemplateRef, {
@@ -113,7 +153,15 @@ export async function updateTemplate(id, name, content) {
         return false
     }
 
-    const templateRef = ref(db, `templates/${id}`)
+    const template = templates.find(t => t.id === id)
+    if (!template) return false
+
+    const user = getCurrentUser()
+    if (!user) return false
+
+    const basePath = template.isShared ? 'templates' : `userTemplates/${user.uid}`
+    const templateRef = ref(db, `${basePath}/${id}`)
+
     await set(templateRef, {
         name,
         content,
@@ -128,7 +176,14 @@ export async function deleteTemplate(id) {
         return false
     }
 
-    const templateRef = ref(db, `templates/${id}`)
+    const template = templates.find(t => t.id === id)
+    if (!template) return false
+
+    const user = getCurrentUser()
+    if (!user) return false
+
+    const basePath = template.isShared ? 'templates' : `userTemplates/${user.uid}`
+    const templateRef = ref(db, `${basePath}/${id}`)
     await remove(templateRef)
 
     if (currentTemplateId === id) {
