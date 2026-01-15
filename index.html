@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회의록 관리 (팀 공유)</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.0/marked.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans KR', Helvetica, Arial, sans-serif;
+            background-color: #0d1117;
+            color: #c9d1d9;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #30363d;
+        }
+
+        h1 {
+            font-size: 24px;
+            font-weight: 600;
+            color: #f0f6fc;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .sync-status {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            background-color: #238636;
+            color: white;
+        }
+
+        .sync-status.offline {
+            background-color: #f85149;
+        }
+
+        .sync-status.syncing {
+            background-color: #d29922;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 1px solid #30363d;
+            background-color: #21262d;
+            color: #c9d1d9;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn:hover {
+            background-color: #30363d;
+            border-color: #8b949e;
+        }
+
+        .btn-primary {
+            background-color: #238636;
+            border-color: #238636;
+            color: #ffffff;
+        }
+
+        .btn-primary:hover {
+            background-color: #2ea043;
+            border-color: #2ea043;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 280px 1fr;
+            gap: 24px;
+        }
+
+        .sidebar {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            height: fit-content;
+            max-height: calc(100vh - 150px);
+            overflow-y: auto;
+        }
+
+        .sidebar h2 {
+            font-size: 14px;
+            font-weight: 600;
+            color: #8b949e;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .meeting-list {
+            list-style: none;
+        }
+
+        .meeting-item {
+            padding: 10px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            transition: background-color 0.2s;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .meeting-item:hover {
+            background-color: #21262d;
+        }
+
+        .meeting-item.active {
+            background-color: #388bfd1a;
+            border-left: 2px solid #388bfd;
+        }
+
+        .meeting-item-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .meeting-item-title {
+            font-size: 14px;
+            color: #c9d1d9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .meeting-item-date {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .meeting-item-delete {
+            opacity: 0;
+            background: none;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: opacity 0.2s;
+        }
+
+        .meeting-item:hover .meeting-item-delete {
+            opacity: 1;
+        }
+
+        .meeting-item-delete:hover {
+            background-color: #f8514922;
+        }
+
+        .content-area {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            min-height: 500px;
+        }
+
+        .content-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid #30363d;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .content-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+        }
+
+        .tab-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .tab-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid transparent;
+            background: none;
+            color: #8b949e;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tab-btn:hover {
+            color: #c9d1d9;
+        }
+
+        .tab-btn.active {
+            background-color: #21262d;
+            border-color: #30363d;
+            color: #c9d1d9;
+        }
+
+        .content-body {
+            padding: 24px;
+        }
+
+        /* 마크다운 뷰어 - GitHub 스타일 */
+        .markdown-body {
+            color: #c9d1d9;
+            line-height: 1.6;
+        }
+
+        .markdown-body h1 {
+            font-size: 2em;
+            font-weight: 600;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #30363d;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            color: #f0f6fc;
+        }
+
+        .markdown-body h1:first-child {
+            margin-top: 0;
+        }
+
+        .markdown-body h2 {
+            font-size: 1.5em;
+            font-weight: 600;
+            padding-bottom: 0.3em;
+            border-bottom: 1px solid #30363d;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            color: #f0f6fc;
+        }
+
+        .markdown-body h3 {
+            font-size: 1.25em;
+            font-weight: 600;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            color: #f0f6fc;
+        }
+
+        .markdown-body h4, .markdown-body h5, .markdown-body h6 {
+            font-weight: 600;
+            margin-bottom: 16px;
+            margin-top: 24px;
+            color: #f0f6fc;
+        }
+
+        .markdown-body p {
+            margin-bottom: 16px;
+        }
+
+        .markdown-body ul, .markdown-body ol {
+            margin-bottom: 16px;
+            padding-left: 2em;
+        }
+
+        .markdown-body li {
+            margin-bottom: 4px;
+        }
+
+        .markdown-body li > ul, .markdown-body li > ol {
+            margin-bottom: 0;
+            margin-top: 4px;
+        }
+
+        .markdown-body code {
+            background-color: #6e768166;
+            padding: 0.2em 0.4em;
+            border-radius: 6px;
+            font-size: 85%;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+        }
+
+        .markdown-body pre {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            overflow-x: auto;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body pre code {
+            background: none;
+            padding: 0;
+            font-size: 85%;
+            line-height: 1.45;
+        }
+
+        .markdown-body blockquote {
+            border-left: 4px solid #30363d;
+            padding-left: 16px;
+            color: #8b949e;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 16px;
+        }
+
+        .markdown-body th, .markdown-body td {
+            border: 1px solid #30363d;
+            padding: 8px 16px;
+            text-align: left;
+        }
+
+        .markdown-body th {
+            background-color: #21262d;
+            font-weight: 600;
+        }
+
+        .markdown-body tr:nth-child(even) {
+            background-color: #161b2233;
+        }
+
+        .markdown-body a {
+            color: #58a6ff;
+            text-decoration: none;
+        }
+
+        .markdown-body a:hover {
+            text-decoration: underline;
+        }
+
+        .markdown-body hr {
+            border: none;
+            border-top: 1px solid #30363d;
+            margin: 24px 0;
+        }
+
+        .markdown-body img {
+            max-width: 100%;
+            border-radius: 6px;
+        }
+
+        .markdown-body input[type="checkbox"] {
+            margin-right: 8px;
+        }
+
+        /* 에디터 */
+        .editor-textarea {
+            width: 100%;
+            min-height: 400px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 16px;
+            color: #c9d1d9;
+            font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .editor-textarea:focus {
+            outline: none;
+            border-color: #388bfd;
+            box-shadow: 0 0 0 3px #388bfd33;
+        }
+
+        /* 업로드 영역 */
+        .upload-area {
+            border: 2px dashed #30363d;
+            border-radius: 6px;
+            padding: 48px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .upload-area:hover, .upload-area.dragover {
+            border-color: #388bfd;
+            background-color: #388bfd11;
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #8b949e;
+            margin-bottom: 8px;
+        }
+
+        .upload-hint {
+            font-size: 13px;
+            color: #6e7681;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 24px;
+            color: #8b949e;
+        }
+
+        .empty-state-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        .empty-state-text {
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+
+        .empty-state-hint {
+            font-size: 14px;
+            color: #6e7681;
+        }
+
+        /* 모달 */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.show {
+            display: flex;
+        }
+
+        .modal {
+            background-color: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 12px;
+            padding: 24px;
+            width: 100%;
+            max-width: 500px;
+            margin: 24px;
+        }
+
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 16px;
+        }
+
+        .modal-input {
+            width: 100%;
+            padding: 10px 12px;
+            background-color: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            color: #c9d1d9;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .modal-input:focus {
+            outline: none;
+            border-color: #388bfd;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
+
+        /* 파일 입력 숨기기 */
+        #fileInput {
+            display: none;
+        }
+
+        /* 템플릿 관련 스타일 */
+        .template-tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 16px;
+            border-bottom: 1px solid #30363d;
+            padding-bottom: 12px;
+        }
+
+        .template-tab {
+            padding: 8px 16px;
+            border: none;
+            background: none;
+            color: #8b949e;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+
+        .template-tab:hover {
+            color: #c9d1d9;
+            background-color: #21262d;
+        }
+
+        .template-tab.active {
+            color: #c9d1d9;
+            background-color: #30363d;
+        }
+
+        .template-pane {
+            min-height: 200px;
+        }
+
+        .template-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .template-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            background-color: #21262d;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .template-item:hover {
+            border-color: #8b949e;
+        }
+
+        .template-item.default {
+            border-color: #238636;
+            background-color: #23863622;
+        }
+
+        .template-item-info {
+            flex: 1;
+        }
+
+        .template-item-name {
+            font-size: 14px;
+            font-weight: 500;
+            color: #f0f6fc;
+        }
+
+        .template-item-preview {
+            font-size: 12px;
+            color: #8b949e;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 400px;
+        }
+
+        .template-item-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .template-item-badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            background-color: #238636;
+            color: white;
+            border-radius: 12px;
+        }
+
+        .template-item-btn {
+            padding: 4px 8px;
+            border: none;
+            background: none;
+            color: #8b949e;
+            cursor: pointer;
+            border-radius: 4px;
+            font-size: 12px;
+        }
+
+        .template-item-btn:hover {
+            background-color: #30363d;
+            color: #c9d1d9;
+        }
+
+        .template-hint {
+            margin-top: 12px;
+            padding: 12px;
+            background-color: #388bfd22;
+            border: 1px solid #388bfd44;
+            border-radius: 6px;
+            font-size: 13px;
+            color: #8b949e;
+        }
+
+        .template-hint code {
+            background-color: #6e768166;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+
+        .empty-template-list {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8b949e;
+        }
+
+        /* 로딩 스피너 */
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(13, 17, 23, 0.9);
+            z-index: 200;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .loading-overlay.show {
+            display: flex;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid #30363d;
+            border-top-color: #388bfd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: #8b949e;
+            font-size: 14px;
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .sidebar {
+                max-height: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">데이터를 불러오는 중...</div>
+    </div>
+
+    <div class="container">
+        <header>
+            <h1>
+                📋 회의록 관리
+                <span class="sync-status" id="syncStatus">연결 중...</span>
+            </h1>
+            <div class="header-actions">
+                <button class="btn" onclick="showTemplateModal()">
+                    <span>📋</span> 템플릿
+                </button>
+                <button class="btn" onclick="showUploadModal()">
+                    <span>📤</span> 업로드
+                </button>
+                <button class="btn btn-primary" onclick="createNewMeeting()">
+                    <span>➕</span> 새 회의록
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="sidebar">
+                <h2>회의록 목록</h2>
+                <ul class="meeting-list" id="meetingList">
+                    <!-- 동적으로 생성 -->
+                </ul>
+            </aside>
+
+            <section class="content-area">
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <div class="empty-state-text">회의록을 선택하거나 새로 만들어주세요</div>
+                    <div class="empty-state-hint">팀원들과 실시간으로 공유됩니다</div>
+                </div>
+
+                <div id="contentView" style="display: none;">
+                    <div class="content-header">
+                        <span class="content-title" id="contentTitle">회의록 제목</span>
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="preview" onclick="switchTab('preview')">미리보기</button>
+                            <button class="tab-btn" data-tab="edit" onclick="switchTab('edit')">편집</button>
+                        </div>
+                    </div>
+                    <div class="content-body">
+                        <div id="previewPane" class="markdown-body">
+                            <!-- 마크다운 렌더링 -->
+                        </div>
+                        <div id="editPane" style="display: none;">
+                            <textarea class="editor-textarea" id="editor" placeholder="마크다운으로 회의록을 작성하세요..."></textarea>
+                            <div style="margin-top: 12px; display: flex; gap: 12px;">
+                                <button class="btn btn-primary" onclick="saveCurrentMeeting()">💾 저장</button>
+                                <button class="btn" onclick="exportMeeting()">📥 내보내기</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 업로드 모달 -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-title">마크다운 파일 업로드</div>
+            <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">클릭하거나 파일을 드래그하세요</div>
+                <div class="upload-hint">.md 파일만 지원됩니다</div>
+            </div>
+            <input type="file" id="fileInput" accept=".md,.markdown,.txt" onchange="handleFileSelect(event)">
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button class="btn" onclick="hideUploadModal()">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새 회의록 모달 -->
+    <div class="modal-overlay" id="newMeetingModal">
+        <div class="modal">
+            <div class="modal-title">새 회의록 만들기</div>
+            <input type="text" class="modal-input" id="newMeetingTitle" placeholder="회의록 제목을 입력하세요">
+            <div class="modal-actions">
+                <button class="btn" onclick="hideNewMeetingModal()">취소</button>
+                <button class="btn btn-primary" onclick="confirmNewMeeting()">만들기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 템플릿 관리 모달 -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-title">템플릿 관리</div>
+            
+            <div class="template-tabs">
+                <button class="template-tab active" data-template-tab="list" onclick="switchTemplateTab('list')">템플릿 목록</button>
+                <button class="template-tab" data-template-tab="edit" onclick="switchTemplateTab('edit')">템플릿 편집</button>
+                <button class="template-tab" data-template-tab="upload" onclick="switchTemplateTab('upload')">업로드</button>
+            </div>
+
+            <!-- 템플릿 목록 -->
+            <div id="templateListPane" class="template-pane">
+                <div class="template-list" id="templateList">
+                    <!-- 동적으로 생성 -->
+                </div>
+                <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" onclick="createNewTemplate()">
+                    ➕ 새 템플릿 만들기
+                </button>
+            </div>
+
+            <!-- 템플릿 편집 -->
+            <div id="templateEditPane" class="template-pane" style="display: none;">
+                <input type="text" class="modal-input" id="templateName" placeholder="템플릿 이름">
+                <textarea class="editor-textarea" id="templateEditor" style="min-height: 250px;" placeholder="마크다운 템플릿을 작성하세요..."></textarea>
+                <div class="template-hint">
+                    💡 팁: <code>{{제목}}</code>을 사용하면 회의록 생성 시 입력한 제목으로 자동 치환됩니다.
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                    <button class="btn" onclick="switchTemplateTab('list')">← 목록으로</button>
+                    <button class="btn btn-primary" onclick="saveTemplate()">💾 저장</button>
+                    <button class="btn" id="deleteTemplateBtn" onclick="deleteCurrentTemplate()" style="margin-left: auto; color: #f85149;">🗑️ 삭제</button>
+                </div>
+            </div>
+
+            <!-- 템플릿 업로드 -->
+            <div id="templateUploadPane" class="template-pane" style="display: none;">
+                <div class="upload-area" id="templateUploadArea" onclick="document.getElementById('templateFileInput').click()">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">클릭하거나 파일을 드래그하세요</div>
+                    <div class="upload-hint">.md 파일을 템플릿으로 등록합니다</div>
+                </div>
+                <input type="file" id="templateFileInput" accept=".md,.markdown,.txt" onchange="handleTemplateFileSelect(event)" style="display: none;">
+            </div>
+
+            <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid #30363d; padding-top: 16px;">
+                <button class="btn" onclick="hideTemplateModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // Firebase SDK imports
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getDatabase, ref, push, set, update, remove, onValue, get } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+        // Firebase 설정
+        const firebaseConfig = {
+            apiKey: "AIzaSyDNjCBR-XnmzkPAYj6BFtYvWy0CuQYaNW0",
+            authDomain: "meeting-notes-team.firebaseapp.com",
+            databaseURL: "https://meeting-notes-team-default-rtdb.asia-southeast1.firebasedatabase.app",
+            projectId: "meeting-notes-team",
+            storageBucket: "meeting-notes-team.firebasestorage.app",
+            messagingSenderId: "952343205730",
+            appId: "1:952343205730:web:182e24d008288c4a3abe3b"
+        };
+
+        // Firebase 초기화
+        const app = initializeApp(firebaseConfig);
+        const db = getDatabase(app);
+
+        // marked 설정
+        marked.setOptions({
+            highlight: function(code, lang) {
+                if (lang && hljs.getLanguage(lang)) {
+                    return hljs.highlight(code, { language: lang }).value;
+                }
+                return hljs.highlightAuto(code).value;
+            },
+            breaks: true,
+            gfm: true
+        });
+
+        // 상태 관리
+        let meetings = [];
+        let currentMeetingId = null;
+        let templates = [];
+        let currentTemplateId = null;
+        let editingTemplateId = null;
+        let unsubscribe = null;
+
+        // 기본 템플릿
+        const defaultTemplate = {
+            id: 'default',
+            name: '기본 템플릿',
+            content: `# {{제목}}
+
+## 📅 일시
+- 
+
+## 👥 참석자
+- 
+
+## 📋 안건
+1. 
+
+## 💬 논의 내용
+
+## ✅ 결정 사항
+
+## 📌 다음 단계
+`,
+            isDefault: true
+        };
+
+        // UI 업데이트 함수들
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('show');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('show');
+        }
+
+        function updateSyncStatus(status) {
+            const el = document.getElementById('syncStatus');
+            el.className = 'sync-status';
+            switch(status) {
+                case 'connected':
+                    el.textContent = '실시간 동기화';
+                    break;
+                case 'offline':
+                    el.classList.add('offline');
+                    el.textContent = '오프라인';
+                    break;
+                case 'syncing':
+                    el.classList.add('syncing');
+                    el.textContent = '동기화 중...';
+                    break;
+                default:
+                    el.textContent = '연결 중...';
+            }
+        }
+
+        // Realtime Database 실시간 리스너 설정
+        function setupRealtimeListener() {
+            const meetingsRef = ref(db, 'meetings');
+            
+            onValue(meetingsRef, (snapshot) => {
+                meetings = [];
+                const data = snapshot.val();
+                
+                if (data) {
+                    Object.keys(data).forEach(key => {
+                        meetings.push({ id: key, ...data[key] });
+                    });
+                    // 최신순 정렬
+                    meetings.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+                }
+                
+                renderMeetingList();
+                updateSyncStatus('connected');
+                hideLoading();
+                
+                // 현재 선택된 회의록이 있으면 업데이트
+                if (currentMeetingId) {
+                    const currentMeeting = meetings.find(m => m.id === currentMeetingId);
+                    if (currentMeeting) {
+                        document.getElementById('contentTitle').textContent = currentMeeting.title;
+                        // 편집 중이 아닐 때만 에디터 내용 업데이트
+                        if (document.getElementById('previewPane').style.display !== 'none') {
+                            renderMarkdown(currentMeeting.content);
+                        }
+                    }
+                }
+            }, (error) => {
+                console.error('Realtime Database 에러:', error);
+                updateSyncStatus('offline');
+                hideLoading();
+                alert('데이터베이스 연결에 실패했습니다. 보안 규칙을 확인해주세요.');
+            });
+        }
+
+        // 템플릿 로드 (로컬 스토리지 - 템플릿은 개인 설정)
+        function loadTemplates() {
+            const savedTemplates = localStorage.getItem('templates');
+            if (savedTemplates) {
+                templates = JSON.parse(savedTemplates);
+            }
+            
+            if (!templates.find(t => t.id === 'default')) {
+                templates.unshift(defaultTemplate);
+                saveTemplates();
+            }
+            
+            currentTemplateId = localStorage.getItem('currentTemplateId') || 'default';
+        }
+
+        function saveTemplates() {
+            localStorage.setItem('templates', JSON.stringify(templates));
+            localStorage.setItem('currentTemplateId', currentTemplateId);
+        }
+
+        function getCurrentTemplate() {
+            return templates.find(t => t.id === currentTemplateId) || templates[0] || defaultTemplate;
+        }
+
+        // 회의록 목록 렌더링
+        function renderMeetingList() {
+            const list = document.getElementById('meetingList');
+            
+            if (meetings.length === 0) {
+                list.innerHTML = '<li style="color: #6e7681; font-size: 13px; padding: 12px;">저장된 회의록이 없습니다</li>';
+                return;
+            }
+
+            list.innerHTML = meetings.map(meeting => `
+                <li class="meeting-item ${meeting.id === currentMeetingId ? 'active' : ''}" 
+                    onclick="window.selectMeeting('${meeting.id}')">
+                    <div class="meeting-item-info">
+                        <div class="meeting-item-title">${escapeHtml(meeting.title)}</div>
+                        <div class="meeting-item-date">${formatDate(meeting.updatedAt)}</div>
+                    </div>
+                    <button class="meeting-item-delete" onclick="event.stopPropagation(); window.deleteMeeting('${meeting.id}')">🗑️</button>
+                </li>
+            `).join('');
+        }
+
+        // 회의록 선택
+        window.selectMeeting = function(id) {
+            currentMeetingId = id;
+            const meeting = meetings.find(m => m.id === id);
+            
+            if (meeting) {
+                document.getElementById('emptyState').style.display = 'none';
+                document.getElementById('contentView').style.display = 'block';
+                document.getElementById('contentTitle').textContent = meeting.title;
+                document.getElementById('editor').value = meeting.content;
+                renderMarkdown(meeting.content);
+                switchTab('preview');
+            }
+            
+            renderMeetingList();
+        }
+
+        // 마크다운 렌더링
+        function renderMarkdown(content) {
+            const html = marked.parse(content);
+            document.getElementById('previewPane').innerHTML = html;
+        }
+
+        // 탭 전환
+        window.switchTab = function(tab) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.tab === tab);
+            });
+            
+            document.getElementById('previewPane').style.display = tab === 'preview' ? 'block' : 'none';
+            document.getElementById('editPane').style.display = tab === 'edit' ? 'block' : 'none';
+            
+            if (tab === 'preview') {
+                const content = document.getElementById('editor').value;
+                renderMarkdown(content);
+            }
+        }
+
+        // 새 회의록 만들기
+        window.createNewMeeting = function() {
+            document.getElementById('newMeetingModal').classList.add('show');
+            document.getElementById('newMeetingTitle').value = '';
+            document.getElementById('newMeetingTitle').focus();
+        }
+
+        window.hideNewMeetingModal = function() {
+            document.getElementById('newMeetingModal').classList.remove('show');
+        }
+
+        window.confirmNewMeeting = async function() {
+            const title = document.getElementById('newMeetingTitle').value.trim();
+            if (!title) {
+                alert('제목을 입력해주세요.');
+                return;
+            }
+
+            const template = getCurrentTemplate();
+            const content = template.content.replace(/\{\{제목\}\}/g, title);
+
+            updateSyncStatus('syncing');
+
+            try {
+                const meetingsRef = ref(db, 'meetings');
+                const newMeetingRef = push(meetingsRef);
+                
+                await set(newMeetingRef, {
+                    title: title,
+                    content: content,
+                    createdAt: new Date().toISOString(),
+                    updatedAt: new Date().toISOString()
+                });
+
+                hideNewMeetingModal();
+                window.selectMeeting(newMeetingRef.key);
+            } catch (error) {
+                console.error('회의록 생성 실패:', error);
+                alert('회의록 생성에 실패했습니다.');
+                updateSyncStatus('offline');
+            }
+        }
+
+        // 현재 회의록 저장
+        window.saveCurrentMeeting = async function() {
+            if (!currentMeetingId) {
+                console.log('No meeting selected');
+                return;
+            }
+            
+            const editorElement = document.getElementById('editor');
+            if (!editorElement) return;
+
+            updateSyncStatus('syncing');
+
+            try {
+                const meetingRef = ref(db, 'meetings/' + currentMeetingId);
+                await update(meetingRef, {
+                    content: editorElement.value,
+                    updatedAt: new Date().toISOString()
+                });
+                
+                renderMarkdown(editorElement.value);
+                alert('저장되었습니다!');
+            } catch (error) {
+                console.error('저장 실패:', error);
+                alert('저장에 실패했습니다.');
+                updateSyncStatus('offline');
+            }
+        }
+
+        // 회의록 삭제
+        window.deleteMeeting = async function(id) {
+            if (!confirm('정말 삭제하시겠습니까? 모든 팀원에게서 삭제됩니다.')) return;
+            
+            updateSyncStatus('syncing');
+
+            try {
+                const meetingRef = ref(db, 'meetings/' + id);
+                await remove(meetingRef);
+                
+                if (currentMeetingId === id) {
+                    currentMeetingId = null;
+                    document.getElementById('emptyState').style.display = 'block';
+                    document.getElementById('contentView').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('삭제 실패:', error);
+                alert('삭제에 실패했습니다.');
+                updateSyncStatus('offline');
+            }
+        }
+
+        // 회의록 내보내기
+        window.exportMeeting = function() {
+            if (!currentMeetingId) return;
+            
+            const meeting = meetings.find(m => m.id === currentMeetingId);
+            const editorElement = document.getElementById('editor');
+            
+            if (meeting && editorElement) {
+                const content = editorElement.value;
+                const blob = new Blob([content], { type: 'text/markdown;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${meeting.title}.md`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }
+        }
+
+        // 업로드 모달
+        window.showUploadModal = function() {
+            document.getElementById('uploadModal').classList.add('show');
+        }
+
+        window.hideUploadModal = function() {
+            document.getElementById('uploadModal').classList.remove('show');
+        }
+
+        // 파일 선택 처리
+        window.handleFileSelect = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                processFile(file);
+            }
+        }
+
+        // 파일 처리
+        async function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = async function(e) {
+                const content = e.target.result;
+                const title = file.name.replace(/\.(md|markdown|txt)$/, '');
+                
+                updateSyncStatus('syncing');
+
+                try {
+                    const meetingsRef = ref(db, 'meetings');
+                    const newMeetingRef = push(meetingsRef);
+                    
+                    await set(newMeetingRef, {
+                        title: title,
+                        content: content,
+                        createdAt: new Date().toISOString(),
+                        updatedAt: new Date().toISOString()
+                    });
+
+                    hideUploadModal();
+                    window.selectMeeting(newMeetingRef.key);
+                } catch (error) {
+                    console.error('업로드 실패:', error);
+                    alert('업로드에 실패했습니다.');
+                    updateSyncStatus('offline');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 드래그 앤 드롭
+        const uploadArea = document.getElementById('uploadArea');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.md') || file.name.endsWith('.markdown') || file.name.endsWith('.txt'))) {
+                processFile(file);
+            } else {
+                alert('.md, .markdown, .txt 파일만 업로드할 수 있습니다.');
+            }
+        });
+
+        // 모달 외부 클릭 시 닫기
+        document.getElementById('uploadModal').addEventListener('click', (e) => {
+            if (e.target.id === 'uploadModal') hideUploadModal();
+        });
+
+        document.getElementById('newMeetingModal').addEventListener('click', (e) => {
+            if (e.target.id === 'newMeetingModal') hideNewMeetingModal();
+        });
+
+        // Enter 키로 새 회의록 생성
+        document.getElementById('newMeetingTitle').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') window.confirmNewMeeting();
+        });
+
+        // 유틸리티 함수
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            const now = new Date();
+            const diff = now - date;
+            
+            if (diff < 60000) return '방금 전';
+            if (diff < 3600000) return `${Math.floor(diff / 60000)}분 전`;
+            if (diff < 86400000) return `${Math.floor(diff / 3600000)}시간 전`;
+            if (diff < 604800000) return `${Math.floor(diff / 86400000)}일 전`;
+            
+            return date.toLocaleDateString('ko-KR', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+
+        // Ctrl+S로 저장
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+                e.preventDefault();
+                if (currentMeetingId) {
+                    window.saveCurrentMeeting();
+                }
+            }
+        });
+
+        // ===== 템플릿 관리 함수들 =====
+        window.showTemplateModal = function() {
+            document.getElementById('templateModal').classList.add('show');
+            switchTemplateTab('list');
+            renderTemplateList();
+        }
+
+        window.hideTemplateModal = function() {
+            document.getElementById('templateModal').classList.remove('show');
+        }
+
+        window.switchTemplateTab = function(tab) {
+            document.querySelectorAll('.template-tab').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.templateTab === tab);
+            });
+            
+            document.getElementById('templateListPane').style.display = tab === 'list' ? 'block' : 'none';
+            document.getElementById('templateEditPane').style.display = tab === 'edit' ? 'block' : 'none';
+            document.getElementById('templateUploadPane').style.display = tab === 'upload' ? 'block' : 'none';
+        }
+
+        function renderTemplateList() {
+            const list = document.getElementById('templateList');
+            
+            if (templates.length === 0) {
+                list.innerHTML = '<div class="empty-template-list">등록된 템플릿이 없습니다</div>';
+                return;
+            }
+
+            list.innerHTML = templates.map(template => `
+                <div class="template-item ${template.id === currentTemplateId ? 'default' : ''}" onclick="window.editTemplate('${template.id}')">
+                    <div class="template-item-info">
+                        <div class="template-item-name">${escapeHtml(template.name)}</div>
+                        <div class="template-item-preview">${escapeHtml(template.content.substring(0, 80))}...</div>
+                    </div>
+                    <div class="template-item-actions">
+                        ${template.id === currentTemplateId ? '<span class="template-item-badge">사용 중</span>' : ''}
+                        <button class="template-item-btn" onclick="event.stopPropagation(); window.setDefaultTemplate('${template.id}')">
+                            ${template.id === currentTemplateId ? '✓' : '기본으로 설정'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        window.setDefaultTemplate = function(id) {
+            currentTemplateId = id;
+            saveTemplates();
+            renderTemplateList();
+        }
+
+        window.createNewTemplate = function() {
+            editingTemplateId = null;
+            document.getElementById('templateName').value = '';
+            document.getElementById('templateEditor').value = `# {{제목}}
+
+## 📅 일시
+- 
+
+## 👥 참석자
+- 
+
+## 📋 안건
+1. 
+
+## 💬 논의 내용
+
+## ✅ 결정 사항
+
+## 📌 다음 단계
+`;
+            document.getElementById('deleteTemplateBtn').style.display = 'none';
+            switchTemplateTab('edit');
+        }
+
+        window.editTemplate = function(id) {
+            const template = templates.find(t => t.id === id);
+            if (!template) return;
+            
+            editingTemplateId = id;
+            document.getElementById('templateName').value = template.name;
+            document.getElementById('templateEditor').value = template.content;
+            document.getElementById('deleteTemplateBtn').style.display = 'block';
+            switchTemplateTab('edit');
+        }
+
+        window.saveTemplate = function() {
+            const name = document.getElementById('templateName').value.trim();
+            const content = document.getElementById('templateEditor').value;
+            
+            if (!name) {
+                alert('템플릿 이름을 입력해주세요.');
+                return;
+            }
+            
+            if (!content) {
+                alert('템플릿 내용을 입력해주세요.');
+                return;
+            }
+
+            if (editingTemplateId) {
+                const template = templates.find(t => t.id === editingTemplateId);
+                if (template) {
+                    template.name = name;
+                    template.content = content;
+                }
+            } else {
+                const newTemplate = {
+                    id: Date.now().toString(),
+                    name: name,
+                    content: content
+                };
+                templates.push(newTemplate);
+            }
+            
+            saveTemplates();
+            switchTemplateTab('list');
+            renderTemplateList();
+            alert('템플릿이 저장되었습니다!');
+        }
+
+        window.deleteCurrentTemplate = function() {
+            if (!editingTemplateId) return;
+            
+            if (editingTemplateId === 'default') {
+                alert('기본 템플릿은 삭제할 수 없습니다.');
+                return;
+            }
+            
+            if (!confirm('정말 이 템플릿을 삭제하시겠습니까?')) return;
+            
+            templates = templates.filter(t => t.id !== editingTemplateId);
+            
+            if (currentTemplateId === editingTemplateId) {
+                currentTemplateId = 'default';
+            }
+            
+            saveTemplates();
+            switchTemplateTab('list');
+            renderTemplateList();
+        }
+
+        window.handleTemplateFileSelect = function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const content = e.target.result;
+                    const name = file.name.replace(/\.(md|markdown|txt)$/, '');
+                    
+                    editingTemplateId = null;
+                    document.getElementById('templateName').value = name;
+                    document.getElementById('templateEditor').value = content;
+                    document.getElementById('deleteTemplateBtn').style.display = 'none';
+                    switchTemplateTab('edit');
+                };
+                reader.readAsText(file);
+            }
+            event.target.value = '';
+        }
+
+        // 템플릿 업로드 영역 드래그 앤 드롭
+        const templateUploadArea = document.getElementById('templateUploadArea');
+
+        templateUploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            templateUploadArea.classList.add('dragover');
+        });
+
+        templateUploadArea.addEventListener('dragleave', () => {
+            templateUploadArea.classList.remove('dragover');
+        });
+
+        templateUploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            templateUploadArea.classList.remove('dragover');
+            
+            const file = e.dataTransfer.files[0];
+            if (file && (file.name.endsWith('.md') || file.name.endsWith('.markdown') || file.name.endsWith('.txt'))) {
+                const reader = new FileReader();
+                reader.onload = function(ev) {
+                    const content = ev.target.result;
+                    const name = file.name.replace(/\.(md|markdown|txt)$/, '');
+                    
+                    editingTemplateId = null;
+                    document.getElementById('templateName').value = name;
+                    document.getElementById('templateEditor').value = content;
+                    document.getElementById('deleteTemplateBtn').style.display = 'none';
+                    switchTemplateTab('edit');
+                };
+                reader.readAsText(file);
+            } else {
+                alert('.md, .markdown, .txt 파일만 업로드할 수 있습니다.');
+            }
+        });
+
+        // 템플릿 모달 외부 클릭 시 닫기
+        document.getElementById('templateModal').addEventListener('click', (e) => {
+            if (e.target.id === 'templateModal') hideTemplateModal();
+        });
+
+        // 초기화
+        showLoading();
+        loadTemplates();
+        setupRealtimeListener();
+    </script>
+</body>
+</html>
