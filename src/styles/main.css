@@ -2415,7 +2415,8 @@ h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 14px 20px;
+    padding: 0 20px;
+    height: 48px;
     font-weight: 600;
     font-size: 14px;
     cursor: pointer;
@@ -2465,7 +2466,8 @@ h1 {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 12px 20px 12px 40px;
+    padding: 0 20px 0 40px;
+    height: 48px;
     font-size: 13px;
     color: #8b949e;
     border-top: 1px solid #30363d;
@@ -2527,6 +2529,19 @@ h1 {
     font-size: 13px;
     font-weight: 600;
     color: #f0f6fc;
+}
+
+.gantt-month-days {
+    display: flex;
+    justify-content: space-around;
+    margin-top: 6px;
+    font-size: 10px;
+    color: #6e7681;
+}
+
+.gantt-day {
+    min-width: 16px;
+    text-align: center;
 }
 
 .gantt-timeline-body {

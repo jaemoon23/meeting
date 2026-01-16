@@ -176,7 +176,9 @@ function renderOverview() {
     const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0
 
     // 진행률
-    document.querySelector('#projectProgress .progress-value').textContent = `${progress}%`
+    const progressRing = document.getElementById('projectProgress')
+    progressRing.style.setProperty('--progress', `${progress}%`)
+    progressRing.querySelector('.progress-value').textContent = `${progress}%`
 
     // 기간
     const dateRange = document.getElementById('projectDateRange')
@@ -276,14 +278,22 @@ function renderGanttChart() {
     minDate.setDate(1)
     maxDate.setMonth(maxDate.getMonth() + 1, 0)
 
-    // 월 목록 생성
+    // 월 목록 생성 (날짜 포함)
     const months = []
     const currentMonth = new Date(minDate)
     while (currentMonth <= maxDate) {
+        const year = currentMonth.getFullYear()
+        const month = currentMonth.getMonth()
+        const daysInMonth = new Date(year, month + 1, 0).getDate()
+        const days = []
+        for (let d = 1; d <= daysInMonth; d++) {
+            days.push(d)
+        }
         months.push({
-            year: currentMonth.getFullYear(),
-            month: currentMonth.getMonth(),
-            name: `${currentMonth.getMonth() + 1}월`
+            year,
+            month,
+            name: `${month + 1}월`,
+            days
         })
         currentMonth.setMonth(currentMonth.getMonth() + 1)
     }
@@ -501,12 +511,25 @@ function renderGanttChart() {
                 ${taskListHtml}
                 <div class="gantt-timeline">
                     <div class="gantt-timeline-header">
-                        ${months.map(m => `
+                        ${months.map(m => {
+                            // 줌 레벨에 따라 표시할 날짜 결정
+                            let daysToShow = []
+                            if (ganttZoom === 'week') {
+                                daysToShow = m.days // 모든 날짜
+                            } else if (ganttZoom === 'month') {
+                                daysToShow = m.days.filter(d => d === 1 || d % 5 === 0) // 1, 5, 10, 15...
+                            } else {
+                                daysToShow = [1, 15] // 분기: 1일, 15일만
+                            }
+                            return `
                             <div class="gantt-month-column">
                                 <div class="gantt-month-year">${m.year}</div>
                                 <div class="gantt-month-name">${m.name}</div>
+                                <div class="gantt-month-days">
+                                    ${daysToShow.map(d => `<span class="gantt-day">${d}</span>`).join('')}
+                                </div>
                             </div>
-                        `).join('')}
+                        `}).join('')}
                     </div>
                     <div class="gantt-timeline-body">
                         ${todayLineHtml}
