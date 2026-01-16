@@ -382,19 +382,15 @@ function renderGanttChart() {
         const msRight = getDatePosition(msEnd)
         const msWidth = Math.max(80, msRight - msLeft + dayWidth)
 
-        // 마일스톤 마커 위치 (종료일 기준)
-        const msMarkerLeft = getDatePosition(msEnd) + dayWidth
-
         timelineRowsHtml += `
-            <div class="gantt-timeline-row group-row">
+            <div class="gantt-timeline-row group-row" data-milestone="${milestone.id}">
                 ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${msWidth}px;">
+                <div class="gantt-bar ${colorClass} milestone-bar" style="left: ${msLeft}px; width: ${msWidth}px;">
                     ${milestone.title}
                     <div class="gantt-progress-track">
                         <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
                     </div>
                 </div>
-                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msMarkerLeft}px;" title="${milestone.title} 완료"></div>` : ''}
             </div>
         `
 
@@ -601,6 +597,17 @@ function renderGanttChart() {
             e.stopPropagation()
             if (item.dataset.task) {
                 openTaskDetailModal(item.dataset.task)
+            }
+        })
+    })
+
+    // 마일스톤 바 클릭 이벤트
+    container.querySelectorAll('.gantt-bar.milestone-bar').forEach(bar => {
+        bar.addEventListener('click', (e) => {
+            e.stopPropagation()
+            const row = bar.closest('.gantt-timeline-row')
+            if (row && row.dataset.milestone) {
+                openMilestoneModal(row.dataset.milestone)
             }
         })
     })

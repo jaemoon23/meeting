@@ -3281,7 +3281,8 @@ h1 {
     background-color: #21262d;
 }
 
-/* 간트 차트 태스크 바 클릭 커서 */
-.gantt-bar.task-bar {
+/* 간트 차트 바 클릭 커서 */
+.gantt-bar.task-bar,
+.gantt-bar.milestone-bar {
     cursor: pointer;
 }
