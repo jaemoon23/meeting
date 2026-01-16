@@ -477,19 +477,6 @@ function renderDiscordSection() {
     })
 }
 
-// 웹훅 URL 저장
-async function saveWebhookUrl() {
-    const url = document.getElementById('discordWebhookUrl').value.trim()
-
-    try {
-        const webhookRef = ref(db, 'adminConfig/discordWebhook')
-        await set(webhookRef, url)
-        alert('웹훅 URL이 저장되었습니다.')
-    } catch (error) {
-        alert('저장에 실패했습니다.')
-    }
-}
-
 // 사용자 추가 핸들러
 async function handleAddUser() {
     const input = document.getElementById('newUserEmail')
