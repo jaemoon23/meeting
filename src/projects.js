@@ -398,7 +398,7 @@ function renderGanttChart() {
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row" data-milestone="${milestone.id}">
                 ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                <div class="gantt-bar milestone-bar ${msShowLabelOutside ? 'label-outside' : ''}" style="left: ${msLeft}px; width: ${msWidth}px; background: linear-gradient(135deg, ${milestoneColor} 0%, ${milestoneColor}dd 100%);">
+                <div class="gantt-bar milestone-bar ${msShowLabelOutside ? 'label-outside' : ''}" style="left: ${msLeft}px; width: ${msWidth}px; background: linear-gradient(135deg, ${milestoneColor} 0%, ${milestoneColor} 100%);">
                     <span class="gantt-bar-label">${milestone.title}</span>
                     <div class="gantt-progress-track">
                         <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
