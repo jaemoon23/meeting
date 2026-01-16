@@ -3303,13 +3303,16 @@ h1 {
 
 /* 바 너비가 작을 때 텍스트를 바 옆에 표시 */
 .gantt-bar.label-outside {
-    overflow: visible;
+    overflow: visible !important;
+    padding: 0 4px;
 }
 
 .gantt-bar.label-outside .gantt-bar-label {
     position: absolute;
-    left: 100%;
-    margin-left: 8px;
+    left: calc(100% + 8px);
+    top: 50%;
+    transform: translateY(-50%);
+    white-space: nowrap;
     color: #8b949e;
     background: transparent;
 }
