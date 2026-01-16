@@ -1236,166 +1236,224 @@ h1 {
 
 /* 댓글 섹션 스타일 */
 .comments-section {
-    margin-top: 24px;
-    padding-top: 24px;
-    border-top: 1px solid #30363d;
+    margin-top: 32px;
+    padding: 24px;
+    background: linear-gradient(180deg, #161b22 0%, #0d1117 100%);
+    border: 1px solid #30363d;
+    border-radius: 12px;
 }
 
 .comments-section-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 10px;
+    margin-bottom: 20px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #30363d;
     font-size: 16px;
     font-weight: 600;
     color: #f0f6fc;
 }
 
+.comments-section-header span {
+    font-size: 20px;
+}
+
 .comments-list {
-    max-height: 400px;
+    max-height: 350px;
     overflow-y: auto;
-    margin-bottom: 16px;
+    margin-bottom: 20px;
+    padding-right: 8px;
+}
+
+.comments-list::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comments-list::-webkit-scrollbar-track {
+    background: #21262d;
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb {
+    background: #484f58;
+    border-radius: 3px;
+}
+
+.comments-list::-webkit-scrollbar-thumb:hover {
+    background: #6e7681;
 }
 
 .comments-empty {
     text-align: center;
-    padding: 32px;
+    padding: 40px 20px;
     color: #8b949e;
     font-size: 14px;
+    background-color: rgba(33, 38, 45, 0.5);
+    border-radius: 8px;
+    border: 1px dashed #30363d;
 }
 
 .comment-item {
-    padding: 12px;
-    margin-bottom: 8px;
-    background-color: #161b22;
+    padding: 16px;
+    margin-bottom: 12px;
+    background-color: #0d1117;
     border: 1px solid #30363d;
-    border-radius: 8px;
+    border-radius: 10px;
+    transition: border-color 0.2s, transform 0.1s;
+}
+
+.comment-item:hover {
+    border-color: #484f58;
+}
+
+.comment-item:last-child {
+    margin-bottom: 0;
 }
 
 .comment-item.own-comment {
-    border-color: #238636;
-    background-color: rgba(35, 134, 54, 0.1);
+    border-left: 3px solid #238636;
+    background: linear-gradient(90deg, rgba(35, 134, 54, 0.08) 0%, #0d1117 100%);
 }
 
 .comment-header {
     display: flex;
     align-items: center;
-    gap: 8px;
-    margin-bottom: 8px;
-    font-size: 12px;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 13px;
 }
 
 .comment-author {
     font-weight: 600;
-    color: #f0f6fc;
+    color: #58a6ff;
 }
 
 .comment-time {
-    color: #8b949e;
+    color: #6e7681;
+    font-size: 12px;
 }
 
 .comment-delete-btn {
     margin-left: auto;
-    padding: 2px 8px;
+    padding: 4px 10px;
     border: none;
-    background: none;
+    background: rgba(248, 81, 73, 0.1);
     color: #f85149;
     font-size: 12px;
     cursor: pointer;
-    border-radius: 4px;
+    border-radius: 6px;
+    transition: background-color 0.2s;
 }
 
 .comment-delete-btn:hover {
-    background-color: rgba(248, 81, 73, 0.1);
+    background-color: rgba(248, 81, 73, 0.2);
 }
 
 .comment-content {
     font-size: 14px;
-    line-height: 1.5;
+    line-height: 1.6;
     color: #c9d1d9;
     word-break: break-word;
 }
 
 .mention-highlight {
     color: #58a6ff;
-    background-color: rgba(88, 166, 255, 0.1);
-    padding: 1px 4px;
+    background-color: rgba(88, 166, 255, 0.15);
+    padding: 2px 6px;
     border-radius: 4px;
+    font-weight: 500;
 }
 
 /* 댓글 입력 폼 */
 .comment-form {
     display: flex;
-    gap: 8px;
+    gap: 12px;
     position: relative;
+    padding: 16px;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 10px;
 }
 
 .comment-input {
     flex: 1;
-    padding: 10px 12px;
-    background-color: #0d1117;
+    padding: 12px 16px;
+    background-color: #161b22;
     border: 1px solid #30363d;
     border-radius: 8px;
     color: #c9d1d9;
     font-size: 14px;
     resize: none;
-    min-height: 40px;
+    min-height: 44px;
     max-height: 120px;
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .comment-input:focus {
     outline: none;
     border-color: #58a6ff;
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
 }
 
 .comment-input::placeholder {
-    color: #8b949e;
+    color: #6e7681;
 }
 
 .comment-submit-btn {
-    padding: 8px 16px;
-    background-color: #238636;
+    padding: 12px 24px;
+    background: linear-gradient(180deg, #238636 0%, #2ea043 100%);
     border: none;
     border-radius: 8px;
     color: white;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
-    transition: background-color 0.2s;
+    transition: transform 0.1s, box-shadow 0.2s;
+    white-space: nowrap;
 }
 
 .comment-submit-btn:hover {
-    background-color: #2ea043;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(35, 134, 54, 0.3);
+}
+
+.comment-submit-btn:active {
+    transform: translateY(0);
 }
 
 .comment-submit-btn:disabled {
-    background-color: #21262d;
-    color: #8b949e;
+    background: #21262d;
+    color: #6e7681;
     cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
 }
 
 /* 멘션 드롭다운 */
 .mention-dropdown {
     position: absolute;
-    bottom: 100%;
-    left: 0;
+    bottom: calc(100% + 8px);
+    left: 16px;
     right: 100px;
-    margin-bottom: 4px;
     background-color: #161b22;
     border: 1px solid #30363d;
-    border-radius: 8px;
+    border-radius: 10px;
     max-height: 200px;
     overflow-y: auto;
     z-index: 100;
     display: none;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .mention-item {
     display: flex;
     flex-direction: column;
-    padding: 8px 12px;
+    gap: 2px;
+    padding: 10px 14px;
     cursor: pointer;
-    border-bottom: 1px solid #30363d;
+    border-bottom: 1px solid #21262d;
+    transition: background-color 0.15s;
 }
 
 .mention-item:last-child {
@@ -1407,6 +1465,10 @@ h1 {
     background-color: #21262d;
 }
 
+.mention-item.active {
+    background-color: rgba(88, 166, 255, 0.1);
+}
+
 .mention-name {
     font-size: 14px;
     font-weight: 500;
@@ -1415,5 +1477,5 @@ h1 {
 
 .mention-email {
     font-size: 12px;
-    color: #8b949e;
+    color: #6e7681;
 }
