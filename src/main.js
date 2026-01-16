@@ -8,6 +8,7 @@ import { loadTemplates, setupTemplatesListener } from './services/template-servi
 import { setupPresence, removePresence, setPresenceCallback } from './services/presence-service.js'
 import { setupDiscordMappingListener, removeDiscordMappingListener } from './services/discord-mapping-service.js'
 import { setupPermissionListener, removePermissionListener, setPermissionCallback } from './services/permission-service.js'
+import { setupAllowedEmailsListener, removeAllowedEmailsListener } from './services/allowed-emails-service.js'
 
 import { showAuthScreen, showAppScreen, setupAuthUI } from './ui/auth-ui.js'
 import { renderOnlineUsers } from './ui/presence-ui.js'
@@ -113,6 +114,7 @@ function initApp() {
             setupPresence(user)
             setupDiscordMappingListener()
             setupPermissionListener()
+            setupAllowedEmailsListener()
 
             // 권한 변경 시 UI 업데이트 (삭제 버튼 표시/숨김)
             setPermissionCallback(() => {
@@ -122,6 +124,7 @@ function initApp() {
             removePresence()
             removeDiscordMappingListener()
             removePermissionListener()
+            removeAllowedEmailsListener()
             showAuthScreen()
             hideLoading()
         }
