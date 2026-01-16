@@ -1182,8 +1182,9 @@ function setupEventListeners() {
 
     document.getElementById('taskDetailEditBtn').addEventListener('click', () => {
         if (viewingTaskId) {
+            const taskIdToEdit = viewingTaskId  // closeTaskDetailModal()이 viewingTaskId를 null로 만들기 전에 저장
             closeTaskDetailModal()
-            openTaskModal(viewingTaskId)
+            openTaskModal(taskIdToEdit)
         }
     })
 
