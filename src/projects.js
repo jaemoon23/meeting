@@ -519,12 +519,16 @@ function renderGanttChart() {
 
     taskListHtml += '</div>'
 
-    // 오늘 표시선 계산
+    // 오늘 표시선 계산 (로컬 시간대 기준)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
+    const todayYear = today.getFullYear()
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0')
+    const todayDay = String(today.getDate()).padStart(2, '0')
+    const todayStr = `${todayYear}-${todayMonth}-${todayDay}`
     let todayLineHtml = ''
     if (today >= minDate && today <= maxDate) {
-        const todayLeft = getDatePosition(today.toISOString().split('T')[0])
+        const todayLeft = getDatePosition(todayStr)
         todayLineHtml = `<div class="gantt-today-line" style="left: ${todayLeft}px;"></div>`
     }
 
