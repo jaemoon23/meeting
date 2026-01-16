@@ -2512,6 +2512,7 @@ h1 {
     padding: 12px 0;
     text-align: center;
     border-right: 1px solid #30363d;
+    background: #21262d;
 }
 
 .gantt-month-column:last-child {
