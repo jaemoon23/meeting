@@ -2677,7 +2677,7 @@ h1 {
 }
 
 .gantt-bar.task-bar {
-    opacity: 0.7;
+    opacity: 1;
 }
 
 /* 진행률 표시 */
