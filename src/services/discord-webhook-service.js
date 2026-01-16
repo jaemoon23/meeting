@@ -51,13 +51,15 @@ export async function sendMentionNotification(meetingTitle, comment) {
 }
 
 // 테스트 메시지 전송
-export async function sendTestMessage(webhookUrl) {
+export async function sendTestMessage(webhookUrl, customTitle = null) {
     if (!webhookUrl) return false
+
+    const title = customTitle || '회의록 관리 앱 - 테스트 알림'
 
     const payload = {
         content: '🔔 웹훅 연결 테스트',
         embeds: [{
-            title: '회의록 관리 앱 - 테스트 알림',
+            title: title,
             description: 'Discord 웹훅이 정상적으로 연결되었습니다!',
             color: 0x00D166,
             timestamp: new Date().toISOString()

@@ -262,20 +262,127 @@ function renderPermissionList() {
     })
 }
 
+// 웹훅 설정 로드 및 UI 반영
+function loadWebhookSettings() {
+    const webhooks = adminConfig.webhooks || {}
+
+    // 각 웹훅별로 URL과 옵션 로드
+    const webhookTypes = ['meeting', 'calendar', 'project']
+
+    webhookTypes.forEach(type => {
+        const urlInput = document.getElementById(`webhook${type.charAt(0).toUpperCase() + type.slice(1)}`)
+        const webhookData = webhooks[type] || {}
+
+        // URL 로드
+        if (urlInput) {
+            urlInput.value = webhookData.url || ''
+        }
+
+        // 옵션 토글 로드
+        const options = webhookData.options || {}
+        document.querySelectorAll(`.webhook-option[data-webhook="${type}"]`).forEach(checkbox => {
+            const option = checkbox.dataset.option
+            checkbox.checked = options[option] === true
+        })
+    })
+}
+
+// 웹훅 설정 저장
+async function saveAllWebhooks() {
+    const webhookTypes = ['meeting', 'calendar', 'project']
+    const webhooks = {}
+
+    webhookTypes.forEach(type => {
+        const urlInput = document.getElementById(`webhook${type.charAt(0).toUpperCase() + type.slice(1)}`)
+        const url = urlInput?.value.trim() || ''
+
+        const options = {}
+        document.querySelectorAll(`.webhook-option[data-webhook="${type}"]`).forEach(checkbox => {
+            options[checkbox.dataset.option] = checkbox.checked
+        })
+
+        webhooks[type] = { url, options }
+    })
+
+    try {
+        const webhooksRef = ref(db, 'adminConfig/webhooks')
+        await set(webhooksRef, webhooks)
+        alert('웹훅 설정이 저장되었습니다.')
+    } catch (error) {
+        console.error('웹훅 저장 실패:', error)
+        alert('저장에 실패했습니다.')
+    }
+}
+
+// 개별 웹훅 옵션 실시간 저장
+async function saveWebhookOption(webhookType, option, value) {
+    try {
+        const optionRef = ref(db, `adminConfig/webhooks/${webhookType}/options/${option}`)
+        await set(optionRef, value)
+    } catch (error) {
+        console.error('웹훅 옵션 저장 실패:', error)
+    }
+}
+
+// 개별 웹훅 URL 실시간 저장
+async function saveWebhookUrl(webhookType, url) {
+    try {
+        const urlRef = ref(db, `adminConfig/webhooks/${webhookType}/url`)
+        await set(urlRef, url)
+    } catch (error) {
+        console.error('웹훅 URL 저장 실패:', error)
+    }
+}
+
+// 웹훅 테스트 전송
+async function testWebhook(webhookType) {
+    const urlInput = document.getElementById(`webhook${webhookType.charAt(0).toUpperCase() + webhookType.slice(1)}`)
+    const url = urlInput?.value.trim()
+
+    if (!url) {
+        alert('웹훅 URL을 먼저 입력해주세요.')
+        return
+    }
+
+    const btn = document.querySelector(`button[data-webhook="${webhookType}"]`)
+    const originalText = btn.textContent
+    btn.disabled = true
+    btn.textContent = '전송 중...'
+
+    try {
+        const typeNames = {
+            meeting: '회의록',
+            calendar: '캘린더',
+            project: '프로젝트'
+        }
+
+        const success = await sendTestMessage(url, `${typeNames[webhookType]} 웹훅 테스트`)
+        if (success) {
+            alert('테스트 메시지가 전송되었습니다!')
+        } else {
+            alert('전송에 실패했습니다. 웹훅 URL을 확인해주세요.')
+        }
+    } catch (error) {
+        alert('전송 중 오류가 발생했습니다.')
+    } finally {
+        btn.disabled = false
+        btn.textContent = originalText
+    }
+}
+
 // Discord 섹션 렌더링
 function renderDiscordSection() {
     const container = document.getElementById('discordMappingList')
-    const webhookInput = document.getElementById('discordWebhookUrl')
     const webhookSection = document.getElementById('webhookSection')
 
     // 웹훅 URL 섹션: Owner만 표시
     if (webhookSection) {
         webhookSection.style.display = isOwner() ? 'block' : 'none'
-    }
 
-    // 웹훅 URL 로드
-    if (webhookInput) {
-        webhookInput.value = adminConfig.discordWebhook || ''
+        // 웹훅 설정 로드
+        if (isOwner()) {
+            loadWebhookSettings()
+        }
     }
 
     // 사용자 Discord 매핑 목록
@@ -515,6 +622,32 @@ function initAdmin() {
         if (e.key === 'Enter') {
             handleAddUser()
         }
+    })
+
+    // 웹훅 관련 이벤트 리스너
+    // 모든 웹훅 저장 버튼
+    document.getElementById('saveAllWebhooksBtn')?.addEventListener('click', saveAllWebhooks)
+
+    // 각 웹훅 테스트 버튼
+    document.querySelectorAll('.webhook-url-row button[data-webhook]').forEach(btn => {
+        btn.addEventListener('click', () => {
+            testWebhook(btn.dataset.webhook)
+        })
+    })
+
+    // 웹훅 옵션 토글 - 실시간 저장
+    document.querySelectorAll('.webhook-option').forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+            saveWebhookOption(checkbox.dataset.webhook, checkbox.dataset.option, checkbox.checked)
+        })
+    })
+
+    // 웹훅 URL 입력 - blur 시 자동 저장
+    document.querySelectorAll('.webhook-url-input').forEach(input => {
+        const webhookType = input.id.replace('webhook', '').toLowerCase()
+        input.addEventListener('blur', () => {
+            saveWebhookUrl(webhookType, input.value.trim())
+        })
     })
 }
 

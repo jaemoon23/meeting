@@ -94,14 +94,112 @@
                         <p>자신의 Discord ID를 설정합니다.</p>
                     </div>
                     <div class="section-content">
-                        <div class="discord-webhook-form" id="webhookSection">
-                            <label>Discord 웹훅 URL</label>
-                            <input type="url" class="admin-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
-                            <div style="display: flex; gap: 8px;">
-                                <button class="btn btn-primary" id="saveWebhookBtn">저장</button>
-                                <button class="btn" id="testWebhookBtn">테스트 전송</button>
+                        <!-- 웹훅 URL 관리 (Owner만) -->
+                        <div class="webhook-management" id="webhookSection">
+                            <div class="list-header">웹훅 URL 관리</div>
+
+                            <!-- 회의록 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">📋</span>
+                                    <span class="webhook-title">회의록 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookMeeting" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="meeting">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="newMeeting">
+                                        <span class="toggle-slider"></span>
+                                        새 회의록 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="comment">
+                                        <span class="toggle-slider"></span>
+                                        댓글 작성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="mention">
+                                        <span class="toggle-slider"></span>
+                                        멘션 알림
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="delete">
+                                        <span class="toggle-slider"></span>
+                                        회의록 삭제
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 캘린더 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">📅</span>
+                                    <span class="webhook-title">캘린더 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookCalendar" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="calendar">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="newEvent">
+                                        <span class="toggle-slider"></span>
+                                        공유 일정 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="editEvent">
+                                        <span class="toggle-slider"></span>
+                                        일정 수정
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="deleteEvent">
+                                        <span class="toggle-slider"></span>
+                                        일정 삭제
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 프로젝트 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">🚀</span>
+                                    <span class="webhook-title">프로젝트 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookProject" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="project">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="newProject">
+                                        <span class="toggle-slider"></span>
+                                        프로젝트 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="milestone">
+                                        <span class="toggle-slider"></span>
+                                        마일스톤 완료
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="taskAssign">
+                                        <span class="toggle-slider"></span>
+                                        태스크 할당
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="taskComplete">
+                                        <span class="toggle-slider"></span>
+                                        태스크 완료
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="webhook-save-row">
+                                <button class="btn btn-primary" id="saveAllWebhooksBtn">모든 웹훅 설정 저장</button>
                             </div>
                         </div>
+
                         <div class="discord-mapping-list" id="discordMappingList">
                             <!-- 동적으로 생성 -->
                         </div>
