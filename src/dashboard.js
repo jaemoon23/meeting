@@ -285,7 +285,7 @@ function renderProjectSummary(projectId) {
             <div class="empty-project">
                 <div class="empty-icon">📁</div>
                 <div class="empty-text">프로젝트를 선택하세요</div>
-                <a href="/projects.html" class="btn btn-primary">프로젝트 관리 →</a>
+                <a href="./projects.html" class="btn btn-primary">프로젝트 관리 →</a>
             </div>
         `
         return
@@ -358,7 +358,7 @@ function renderProjectSummaryContent(project) {
             ${project.description ? `<p class="project-desc">${project.description}</p>` : ''}
 
             <div class="summary-actions">
-                <a href="/projects.html?id=${project.id}" class="btn btn-primary">상세 보기 →</a>
+                <a href="./projects.html?id=${project.id}" class="btn btn-primary">상세 보기 →</a>
             </div>
         </div>
     `
@@ -441,7 +441,7 @@ function setupEventListeners() {
                 <div class="empty-project">
                     <div class="empty-icon">📁</div>
                     <div class="empty-text">프로젝트를 선택하세요</div>
-                    <a href="/projects.html" class="btn btn-primary">프로젝트 관리 →</a>
+                    <a href="./projects.html" class="btn btn-primary">프로젝트 관리 →</a>
                 </div>
             `
         }
