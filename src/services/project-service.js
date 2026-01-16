@@ -1,6 +1,7 @@
 import { db } from '../lib/firebase.js'
 import { ref, push, set, remove, update, onValue, off, get } from 'firebase/database'
 import { getCurrentUser } from './auth-service.js'
+import { sendNewProjectNotification, sendTaskAssignNotification, sendTaskCompleteNotification } from './discord-webhook-service.js'
 
 let projectsRef = null
 let projects = []
@@ -144,6 +145,10 @@ export async function createProject(projectData) {
     }
 
     await set(newProjectRef, project)
+
+    // Discord 웹훅 알림 전송
+    sendNewProjectNotification(project)
+
     return newProjectRef.key
 }
 
@@ -240,15 +245,39 @@ export async function createTask(projectId, taskData) {
     }
 
     await set(newTaskRef, task)
+
+    // 담당자가 있으면 Discord 알림 전송
+    if (task.assignee) {
+        const project = getProjectById(projectId)
+        if (project) {
+            sendTaskAssignNotification(project, task, task.assignee)
+        }
+    }
+
     return newTaskRef.key
 }
 
 export async function updateTask(projectId, taskId, taskData) {
+    const user = getCurrentUser()
+    const oldTask = getTaskById(taskId)
+    const project = getProjectById(projectId)
+
     const taskRef = ref(db, `tasks/${projectId}/${taskId}`)
     await update(taskRef, {
         ...taskData,
         updatedAt: Date.now()
     })
+
+    // 태스크가 완료되면 Discord 알림 전송
+    if (project && taskData.status === 'completed' && oldTask?.status !== 'completed') {
+        sendTaskCompleteNotification(project, { ...oldTask, ...taskData }, user?.displayName || user?.email || '알 수 없음')
+    }
+
+    // 새로운 담당자가 할당되면 Discord 알림 전송
+    if (project && taskData.assignee && (!oldTask?.assignee || oldTask.assignee.email !== taskData.assignee.email)) {
+        sendTaskAssignNotification(project, { ...oldTask, ...taskData }, taskData.assignee)
+    }
+
     return true
 }
 

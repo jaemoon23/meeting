@@ -2,7 +2,7 @@ import { db } from '../lib/firebase.js'
 import { ref, push, set, remove, onValue, off, get } from 'firebase/database'
 import { getCurrentUser } from './auth-service.js'
 import { getDiscordIdByEmail } from './discord-mapping-service.js'
-import { sendMentionNotification } from './discord-webhook-service.js'
+import { sendMentionNotification, sendCommentNotification } from './discord-webhook-service.js'
 import { getMeetingById } from './meeting-service.js'
 
 let currentCommentsRef = null
@@ -77,11 +77,15 @@ export async function createComment(meetingId, content) {
     const newCommentRef = push(commentsRef)
     await set(newCommentRef, commentData)
 
-    // Discord 알림 전송 (멘션이 있는 경우)
+    const meeting = getMeetingById(meetingId)
+    const meetingTitle = meeting?.title || '회의록'
+
+    // Discord 알림 전송 - 일반 댓글 알림
+    sendCommentNotification(meetingTitle, commentData)
+
+    // Discord 알림 전송 - 멘션 알림 (멘션이 있는 경우)
     if (mentions.some(m => m.discordId)) {
-        const meeting = getMeetingById(meetingId)
-        const meetingTitle = meeting?.title || '회의록'
-        await sendMentionNotification(meetingTitle, commentData)
+        sendMentionNotification(meetingTitle, commentData)
     }
 
     return newCommentRef.key

@@ -1,6 +1,7 @@
 import { db } from '../lib/firebase.js'
 import { ref, push, set, remove, onValue, off, query, orderByChild } from 'firebase/database'
 import { getCurrentUser } from './auth-service.js'
+import { sendNewEventNotification, sendEventEditNotification, sendEventDeleteNotification } from './discord-webhook-service.js'
 
 let sharedEventsRef = null
 let personalEventsRef = null
@@ -94,6 +95,12 @@ export async function createEvent(eventData) {
     }
 
     await set(newEventRef, event)
+
+    // 공유 일정인 경우 Discord 웹훅 알림 전송
+    if (eventData.isShared) {
+        sendNewEventNotification(event)
+    }
+
     return newEventRef.key
 }
 
@@ -110,17 +117,30 @@ export async function updateEvent(eventId, eventData, isShared) {
         updatedAt: Date.now()
     })
 
+    // 공유 일정인 경우 Discord 웹훅 알림 전송
+    if (isShared) {
+        sendEventEditNotification(eventData, user.displayName || user.email)
+    }
+
     return true
 }
 
 // 일정 삭제
-export async function deleteEvent(eventId, isShared) {
+export async function deleteEvent(eventId, isShared, eventData = null) {
     const user = getCurrentUser()
     if (!user) return false
+
+    // 삭제 전에 일정 정보 저장 (알림용)
+    const eventToDelete = eventData || getAllEvents().find(e => e.id === eventId)
 
     const basePath = isShared ? 'events/shared' : `events/personal/${user.uid}`
     const eventRef = ref(db, `${basePath}/${eventId}`)
     await remove(eventRef)
+
+    // 공유 일정인 경우 Discord 웹훅 알림 전송
+    if (isShared && eventToDelete) {
+        sendEventDeleteNotification(eventToDelete, user.displayName || user.email)
+    }
 
     return true
 }

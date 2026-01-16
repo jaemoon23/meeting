@@ -61,6 +61,14 @@
     "categories": {
       ".read": "auth != null",
       ".write": "auth != null"
+    },
+    "comments": {
+      "$meetingId": {
+        ".read": "auth != null",
+        "$commentId": {
+          ".write": "auth != null && (!data.exists() || data.child('authorUid').val() === auth.uid)"
+        }
+      }
     }
   }
 }

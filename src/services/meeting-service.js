@@ -1,6 +1,8 @@
 import { db } from '../lib/firebase.js'
 import { ref, push, set, update, remove, onValue } from 'firebase/database'
 import { updateSyncStatus } from '../utils/helpers.js'
+import { getCurrentUser } from './auth-service.js'
+import { sendNewMeetingNotification, sendMeetingDeleteNotification } from './discord-webhook-service.js'
 
 let meetings = []
 let meetingsCallback = null
@@ -49,14 +51,20 @@ export async function createMeeting(title, content, category) {
     try {
         const meetingsRef = ref(db, 'meetings')
         const newMeetingRef = push(meetingsRef)
+        const user = getCurrentUser()
 
-        await set(newMeetingRef, {
+        const meetingData = {
             title: title,
             content: content,
             category: category === '미분류' ? '' : category,
             createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
-        })
+        }
+
+        await set(newMeetingRef, meetingData)
+
+        // Discord 웹훅 알림 전송
+        sendNewMeetingNotification(meetingData, user?.displayName || user?.email || '알 수 없음')
 
         return newMeetingRef.key
     } catch (error) {
@@ -102,8 +110,17 @@ export async function deleteMeeting(id) {
     updateSyncStatus('syncing')
 
     try {
+        // 삭제 전에 회의록 정보 저장 (알림용)
+        const meeting = getMeetingById(id)
+        const user = getCurrentUser()
+
         const meetingRef = ref(db, 'meetings/' + id)
         await remove(meetingRef)
+
+        // Discord 웹훅 알림 전송
+        if (meeting) {
+            sendMeetingDeleteNotification(meeting, user?.displayName || user?.email || '알 수 없음')
+        }
     } catch (error) {
         console.error('삭제 실패:', error)
         updateSyncStatus('offline')
