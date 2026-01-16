@@ -57,7 +57,6 @@ h1 {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
-    margin-right: auto;
 }
 
 .btn {
@@ -1487,6 +1486,8 @@ h1 {
 .main-nav {
     display: flex;
     gap: 8px;
+    flex: 1;
+    justify-content: center;
 }
 
 .nav-link {
