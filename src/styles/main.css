@@ -2508,9 +2508,8 @@ h1 {
 }
 
 .gantt-month-column {
-    flex: 1;
-    min-width: 120px;
-    padding: 12px 16px;
+    flex: none;
+    padding: 12px 0;
     text-align: center;
     border-right: 1px solid #30363d;
 }
@@ -2532,17 +2531,16 @@ h1 {
 }
 
 .gantt-month-days {
-    display: flex;
-    justify-content: space-around;
+    position: relative;
+    height: 20px;
     margin-top: 6px;
-    font-size: 10px;
-    color: #6e7681;
 }
 
 .gantt-day {
-    min-width: 16px;
-    text-align: center;
-    position: relative;
+    position: absolute;
+    font-size: 10px;
+    color: #6e7681;
+    transform: translateX(-50%);
 }
 
 /* 날짜 구분선 */
@@ -2554,7 +2552,7 @@ h1 {
     width: 1px;
     height: 8px;
     background: #30363d;
-    margin-top: 4px;
+    margin-top: 2px;
 }
 
 .gantt-timeline-body {
@@ -2575,8 +2573,7 @@ h1 {
 }
 
 .gantt-timeline-cell {
-    flex: 1;
-    min-width: 120px;
+    flex: none;
     height: 100%;
     border-right: 1px solid #30363d;
     position: relative;

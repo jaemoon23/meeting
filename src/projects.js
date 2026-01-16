@@ -377,7 +377,7 @@ function renderGanttChart() {
 
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
-                ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
                 <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${msWidth}px;">
                     ${milestone.title}
                     <div class="gantt-progress-track">
@@ -401,7 +401,7 @@ function renderGanttChart() {
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
-                    ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                    ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
@@ -442,7 +442,7 @@ function renderGanttChart() {
         // 미분류 그룹 행
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
-                ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
                 <div class="gantt-bar ${colorClass}" style="left: 20px; width: 80px;">
                     미분류
                 </div>
@@ -461,7 +461,7 @@ function renderGanttChart() {
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
-                    ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                    ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
@@ -545,12 +545,16 @@ function renderGanttChart() {
                             } else {
                                 daysToShow = [1, 15] // 분기: 1일, 15일만
                             }
+                            const daysInMonth = m.days.length
                             return `
-                            <div class="gantt-month-column">
+                            <div class="gantt-month-column" style="width: ${columnWidth}px; min-width: ${columnWidth}px;">
                                 <div class="gantt-month-year">${m.year}</div>
                                 <div class="gantt-month-name">${m.name}</div>
                                 <div class="gantt-month-days">
-                                    ${daysToShow.map(d => `<span class="gantt-day">${d}</span>`).join('')}
+                                    ${daysToShow.map(d => {
+                                        const leftPercent = ((d - 1) / daysInMonth) * 100
+                                        return `<span class="gantt-day" style="left: ${leftPercent}%">${d}</span>`
+                                    }).join('')}
                                 </div>
                             </div>
                         `}).join('')}
