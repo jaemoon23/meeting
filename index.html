@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀 워크스페이스 - 대시보드</title>
+  <script type="module" crossorigin src="/meeting/assets/main-BbrK0a8Y.js"></script>
+  <link rel="modulepreload" crossorigin href="/meeting/assets/permission-service-DHxnA_q4.js">
+  <link rel="modulepreload" crossorigin href="/meeting/assets/helpers-F6ttY5H5.js">
+  <link rel="modulepreload" crossorigin href="/meeting/assets/project-service-BqVoItuz.js">
+  <link rel="stylesheet" crossorigin href="/meeting/assets/helpers-DNWPObC8.css">
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">데이터를 불러오는 중...</div>
+    </div>
+
+    <!-- 인증 화면 -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="auth-icon">📊</div>
+            <h1 class="auth-title">팀 워크스페이스</h1>
+            <p class="auth-subtitle">팀원들과 프로젝트와 일정을 관리하세요</p>
+            <button class="btn btn-google" id="googleLoginBtn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                <span>Google로 로그인</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div class="container app-hidden" id="appContainer">
+        <header>
+            <h1>📊 팀 워크스페이스</h1>
+            <nav class="main-nav">
+                <a href="./index.html" class="nav-link active">대시보드</a>
+                <a href="./meetings.html" class="nav-link">회의록</a>
+                <a href="./projects.html" class="nav-link">프로젝트</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <a href="./admin.html" class="btn btn-admin" id="adminBtn" style="display: none;">
+                    <span>👑</span> 관리
+                </a>
+                <button class="btn btn-danger" id="logoutBtn">
+                    <span>🚪</span> 로그아웃
+                </button>
+            </div>
+        </header>
+
+        <main class="dashboard-content">
+            <!-- 상단: 캘린더 + 할당된 일정 -->
+            <div class="dashboard-top">
+                <!-- 캘린더 -->
+                <section class="dashboard-card calendar-section">
+                    <div class="card-header">
+                        <h2>📅 캘린더</h2>
+                        <button class="btn btn-small" id="addEventBtn">+ 일정 추가</button>
+                    </div>
+                    <div class="calendar-container" id="calendarContainer">
+                        <div class="calendar-header">
+                            <button class="calendar-nav-btn" id="prevMonthBtn">◀</button>
+                            <span class="calendar-title" id="calendarTitle">2026년 1월</span>
+                            <button class="calendar-nav-btn" id="nextMonthBtn">▶</button>
+                        </div>
+                        <div class="calendar-weekdays">
+                            <span>일</span><span>월</span><span>화</span><span>수</span><span>목</span><span>금</span><span>토</span>
+                        </div>
+                        <div class="calendar-days" id="calendarDays">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                        <div class="calendar-legend">
+                            <span class="legend-item"><span class="dot shared"></span> 공유</span>
+                            <span class="legend-item"><span class="dot personal"></span> 개인</span>
+                            <span class="legend-item"><span class="dot today"></span> 오늘</span>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 할당된 일정 -->
+                <section class="dashboard-card tasks-section">
+                    <div class="card-header">
+                        <h2>📌 나에게 할당된 일정</h2>
+                    </div>
+                    <div class="tasks-list" id="myTasksList">
+                        <div class="empty-tasks">할당된 일정이 없습니다</div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- 하단: 프로젝트 요약 -->
+            <section class="dashboard-card project-section">
+                <div class="card-header">
+                    <h2>🚀 현재 프로젝트</h2>
+                    <select class="project-select" id="projectSelect">
+                        <option value="">프로젝트 선택...</option>
+                        <!-- 동적으로 생성 -->
+                    </select>
+                </div>
+                <div class="project-summary" id="projectSummary">
+                    <div class="empty-project">
+                        <div class="empty-icon">📁</div>
+                        <div class="empty-text">프로젝트를 선택하세요</div>
+                        <a href="./projects.html" class="btn btn-primary">프로젝트 관리 →</a>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 일정 추가 모달 -->
+    <div class="modal-overlay" id="eventModal">
+        <div class="modal">
+            <div class="modal-title">일정 추가</div>
+            <label class="modal-label">제목</label>
+            <input type="text" class="modal-input" id="eventTitle" placeholder="일정 제목">
+            <label class="modal-label">날짜</label>
+            <input type="date" class="modal-input" id="eventDate">
+            <label class="modal-label">시간 (선택)</label>
+            <input type="time" class="modal-input" id="eventTime">
+            <label class="modal-label">설명 (선택)</label>
+            <textarea class="modal-input" id="eventDescription" rows="3" placeholder="일정 설명"></textarea>
+            <label class="modal-label">공개 범위</label>
+            <div class="event-type-select" id="eventTypeSelect">
+                <button type="button" class="type-option selected" data-type="shared">🌐 공유 (모두에게 표시)</button>
+                <button type="button" class="type-option" data-type="personal">👤 개인 (나만 표시)</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="eventModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="eventConfirmBtn">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일정 상세 모달 -->
+    <div class="modal-overlay" id="eventDetailModal">
+        <div class="modal">
+            <div class="modal-title" id="eventDetailTitle">일정 상세</div>
+            <div class="event-detail-content" id="eventDetailContent">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" id="deleteEventBtn" style="margin-right: auto;">삭제</button>
+                <button class="btn" id="eventDetailCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>

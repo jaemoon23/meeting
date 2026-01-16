@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>관리자 - 회의록 관리</title>
+  <script type="module" crossorigin src="/meeting/assets/admin-DRewrQ3-.js"></script>
+  <link rel="modulepreload" crossorigin href="/meeting/assets/permission-service-DHxnA_q4.js">
+  <link rel="modulepreload" crossorigin href="/meeting/assets/admin-CsbdPve9.js">
+  <link rel="stylesheet" crossorigin href="/meeting/assets/admin-SkpTtkXA.css">
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">로딩 중...</div>
+    </div>
+
+    <!-- 접근 거부 화면 -->
+    <div class="access-denied" id="accessDenied" style="display: none;">
+        <div class="access-denied-box">
+            <div class="access-denied-icon">🚫</div>
+            <h1>접근 권한 없음</h1>
+            <p>관리자만 접근할 수 있는 페이지입니다.</p>
+            <a href="./index.html" class="btn btn-primary">메인으로 돌아가기</a>
+        </div>
+    </div>
+
+    <!-- 관리자 대시보드 -->
+    <div class="admin-container" id="adminContainer" style="display: none;">
+        <header class="admin-header">
+            <div class="admin-header-left">
+                <h1>👑 관리자 대시보드</h1>
+            </div>
+            <div class="admin-header-right">
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <a href="./index.html" class="btn">← 메인으로</a>
+                <button class="btn btn-danger" id="logoutBtn">로그아웃</button>
+            </div>
+        </header>
+
+        <main class="admin-main">
+            <!-- 사이드바 네비게이션 -->
+            <nav class="admin-sidebar">
+                <button class="admin-nav-item" data-section="users">
+                    <span>👥</span> 사용자 관리
+                </button>
+                <button class="admin-nav-item" data-section="permissions">
+                    <span>🔐</span> 권한 관리
+                </button>
+                <button class="admin-nav-item active" data-section="discord">
+                    <span>💬</span> Discord 설정
+                </button>
+                <button class="admin-nav-item" data-section="settings">
+                    <span>⚙️</span> 시스템 설정
+                </button>
+            </nav>
+
+            <!-- 콘텐츠 영역 -->
+            <div class="admin-content">
+                <!-- 사용자 관리 섹션 -->
+                <section class="admin-section" id="section-users" style="display: none;">
+                    <div class="section-header">
+                        <h2>사용자 관리</h2>
+                        <p>허용된 이메일 목록을 관리합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="add-user-form">
+                            <input type="email" class="admin-input" id="newUserEmail" placeholder="새 사용자 이메일">
+                            <button class="btn btn-primary" id="addUserBtn">추가</button>
+                        </div>
+                        <div class="user-list" id="userList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 권한 관리 섹션 -->
+                <section class="admin-section" id="section-permissions" style="display: none;">
+                    <div class="section-header">
+                        <h2>권한 관리</h2>
+                        <p>사용자별 관리자 권한을 설정합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="permission-list" id="permissionList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Discord 설정 섹션 -->
+                <section class="admin-section" id="section-discord">
+                    <div class="section-header">
+                        <h2>Discord 설정</h2>
+                        <p>자신의 Discord ID를 설정합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <!-- 웹훅 URL 관리 (Owner만) -->
+                        <div class="webhook-management" id="webhookSection">
+                            <div class="list-header">웹훅 URL 관리</div>
+
+                            <!-- 회의록 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">📋</span>
+                                    <span class="webhook-title">회의록 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookMeeting" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="meeting">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="newMeeting">
+                                        <span class="toggle-slider"></span>
+                                        새 회의록 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="comment">
+                                        <span class="toggle-slider"></span>
+                                        댓글 작성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="mention">
+                                        <span class="toggle-slider"></span>
+                                        멘션 알림
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="meeting" data-option="delete">
+                                        <span class="toggle-slider"></span>
+                                        회의록 삭제
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 캘린더 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">📅</span>
+                                    <span class="webhook-title">캘린더 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookCalendar" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="calendar">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="newEvent">
+                                        <span class="toggle-slider"></span>
+                                        공유 일정 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="editEvent">
+                                        <span class="toggle-slider"></span>
+                                        일정 수정
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="calendar" data-option="deleteEvent">
+                                        <span class="toggle-slider"></span>
+                                        일정 삭제
+                                    </label>
+                                </div>
+                            </div>
+
+                            <!-- 프로젝트 웹훅 -->
+                            <div class="webhook-card">
+                                <div class="webhook-header">
+                                    <span class="webhook-icon">🚀</span>
+                                    <span class="webhook-title">프로젝트 알림</span>
+                                </div>
+                                <div class="webhook-url-row">
+                                    <input type="url" class="admin-input webhook-url-input" id="webhookProject" placeholder="https://discord.com/api/webhooks/...">
+                                    <button class="btn btn-small" data-webhook="project">테스트</button>
+                                </div>
+                                <div class="webhook-options">
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="newProject">
+                                        <span class="toggle-slider"></span>
+                                        프로젝트 생성
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="milestone">
+                                        <span class="toggle-slider"></span>
+                                        마일스톤 완료
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="taskAssign">
+                                        <span class="toggle-slider"></span>
+                                        태스크 할당
+                                    </label>
+                                    <label class="toggle-label">
+                                        <input type="checkbox" class="webhook-option" data-webhook="project" data-option="taskComplete">
+                                        <span class="toggle-slider"></span>
+                                        태스크 완료
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="webhook-save-row">
+                                <button class="btn btn-primary" id="saveAllWebhooksBtn">모든 웹훅 설정 저장</button>
+                            </div>
+                        </div>
+
+                        <div class="discord-mapping-list" id="discordMappingList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 시스템 설정 섹션 -->
+                <section class="admin-section" id="section-settings" style="display: none;">
+                    <div class="section-header">
+                        <h2>시스템 설정</h2>
+                        <p>앱 전반적인 설정을 관리합니다.</p>
+                    </div>
+                    <div class="section-content">
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">앱 버전</div>
+                                <div class="setting-value">1.0.0</div>
+                            </div>
+                        </div>
+                        <div class="setting-item">
+                            <div class="setting-info">
+                                <div class="setting-name">슈퍼 관리자</div>
+                                <div class="setting-value">990914s@gmail.com</div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+</body>
+</html>

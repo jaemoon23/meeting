@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>팀 워크스페이스 - 프로젝트 관리</title>
+  <script type="module" crossorigin src="/meeting/assets/projects-Ctrq77lG.js"></script>
+  <link rel="modulepreload" crossorigin href="/meeting/assets/permission-service-DHxnA_q4.js">
+  <link rel="modulepreload" crossorigin href="/meeting/assets/helpers-F6ttY5H5.js">
+  <link rel="modulepreload" crossorigin href="/meeting/assets/project-service-BqVoItuz.js">
+  <link rel="stylesheet" crossorigin href="/meeting/assets/helpers-DNWPObC8.css">
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">데이터를 불러오는 중...</div>
+    </div>
+
+    <!-- 인증 화면 -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="auth-icon">🚀</div>
+            <h1 class="auth-title">프로젝트 관리</h1>
+            <p class="auth-subtitle">팀 프로젝트를 체계적으로 관리하세요</p>
+            <button class="btn btn-google" id="googleLoginBtn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                <span>Google로 로그인</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div class="container app-hidden" id="appContainer">
+        <header>
+            <h1>🚀 프로젝트 관리</h1>
+            <nav class="main-nav">
+                <a href="./index.html" class="nav-link">대시보드</a>
+                <a href="./meetings.html" class="nav-link">회의록</a>
+                <a href="./projects.html" class="nav-link active">프로젝트</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <a href="./admin.html" class="btn btn-admin" id="adminBtn" style="display: none;">
+                    <span>👑</span> 관리
+                </a>
+                <button class="btn btn-primary" id="newProjectBtn">
+                    <span>➕</span> 새 프로젝트
+                </button>
+                <button class="btn btn-danger" id="logoutBtn">
+                    <span>🚪</span> 로그아웃
+                </button>
+            </div>
+        </header>
+
+        <main class="projects-content">
+            <!-- 프로젝트 목록 뷰 -->
+            <div id="projectListView">
+                <div class="projects-header">
+                    <h2>내 프로젝트</h2>
+                    <div class="projects-filter">
+                        <button class="filter-btn active" data-filter="all">전체</button>
+                        <button class="filter-btn" data-filter="active">진행중</button>
+                        <button class="filter-btn" data-filter="completed">완료</button>
+                    </div>
+                </div>
+                <div class="projects-grid" id="projectsGrid">
+                    <!-- 동적으로 생성 -->
+                </div>
+            </div>
+
+            <!-- 프로젝트 상세 뷰 -->
+            <div id="projectDetailView" style="display: none;">
+                <div class="project-detail-header">
+                    <button class="btn btn-back" id="backToListBtn">← 목록으로</button>
+                    <h2 id="projectDetailTitle">프로젝트 제목</h2>
+                    <div class="project-detail-actions">
+                        <button class="btn" id="editProjectBtn">✏️ 편집</button>
+                        <button class="btn btn-danger" id="deleteProjectBtn">🗑️ 삭제</button>
+                    </div>
+                </div>
+
+                <div class="project-detail-tabs">
+                    <button class="detail-tab active" data-tab="overview">개요</button>
+                    <button class="detail-tab" data-tab="gantt">간트 차트</button>
+                    <button class="detail-tab" data-tab="tasks">태스크</button>
+                    <button class="detail-tab" data-tab="members">팀원</button>
+                </div>
+
+                <!-- 개요 탭 -->
+                <div class="detail-pane" id="overviewPane">
+                    <div class="overview-grid">
+                        <div class="overview-card">
+                            <h3>📊 진행률</h3>
+                            <div class="progress-ring" id="projectProgress">
+                                <div class="progress-value">0%</div>
+                            </div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>📅 기간</h3>
+                            <div class="date-range" id="projectDateRange">
+                                <span class="start-date">-</span>
+                                <span class="separator">~</span>
+                                <span class="end-date">-</span>
+                            </div>
+                            <div class="days-remaining" id="daysRemaining">-</div>
+                        </div>
+                        <div class="overview-card">
+                            <h3>📋 태스크</h3>
+                            <div class="task-stats" id="taskStats">
+                                <div class="stat"><span class="count">0</span><span class="label">전체</span></div>
+                                <div class="stat"><span class="count">0</span><span class="label">완료</span></div>
+                                <div class="stat"><span class="count">0</span><span class="label">진행중</span></div>
+                            </div>
+                        </div>
+                        <div class="overview-card full-width">
+                            <h3>📝 설명</h3>
+                            <p id="projectDescription">-</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 간트 차트 탭 -->
+                <div class="detail-pane" id="ganttPane" style="display: none;">
+                    <div class="gantt-controls">
+                        <button class="btn btn-small" id="addMilestoneBtn">+ 마일스톤 추가</button>
+                        <div class="gantt-zoom">
+                            <button class="zoom-btn" data-zoom="week">주</button>
+                            <button class="zoom-btn active" data-zoom="month">월</button>
+                            <button class="zoom-btn" data-zoom="quarter">분기</button>
+                        </div>
+                    </div>
+                    <div class="gantt-container" id="ganttContainer">
+                        <div class="gantt-chart" id="ganttChart">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 태스크 탭 -->
+                <div class="detail-pane" id="tasksPane" style="display: none;">
+                    <div class="tasks-controls">
+                        <button class="btn btn-primary" id="addTaskBtn">+ 태스크 추가</button>
+                        <select class="task-filter-select" id="taskMilestoneFilter">
+                            <option value="all">모든 마일스톤</option>
+                            <!-- 동적으로 생성 -->
+                        </select>
+                    </div>
+                    <div class="tasks-table" id="tasksTable">
+                        <div class="tasks-header">
+                            <span class="col-status">상태</span>
+                            <span class="col-title">태스크</span>
+                            <span class="col-assignee">담당자</span>
+                            <span class="col-date">기간</span>
+                            <span class="col-priority">우선순위</span>
+                            <span class="col-actions">작업</span>
+                        </div>
+                        <div class="tasks-body" id="tasksBody">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 팀원 탭 -->
+                <div class="detail-pane" id="membersPane" style="display: none;">
+                    <div class="members-controls">
+                        <button class="btn btn-primary" id="addMemberBtn">+ 팀원 추가</button>
+                    </div>
+                    <div class="members-list" id="membersList">
+                        <!-- 동적으로 생성 -->
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 새 프로젝트 모달 -->
+    <div class="modal-overlay" id="projectModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-title" id="projectModalTitle">새 프로젝트</div>
+            <label class="modal-label">프로젝트 이름</label>
+            <input type="text" class="modal-input" id="projectName" placeholder="프로젝트 이름">
+            <label class="modal-label">설명</label>
+            <textarea class="modal-input" id="projectDesc" rows="3" placeholder="프로젝트 설명"></textarea>
+            <div class="modal-row">
+                <div class="modal-col">
+                    <label class="modal-label">시작일</label>
+                    <input type="date" class="modal-input" id="projectStartDate">
+                </div>
+                <div class="modal-col">
+                    <label class="modal-label">종료일</label>
+                    <input type="date" class="modal-input" id="projectEndDate">
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="projectModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="projectConfirmBtn">만들기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 마일스톤 모달 -->
+    <div class="modal-overlay" id="milestoneModal">
+        <div class="modal">
+            <div class="modal-title" id="milestoneModalTitle">마일스톤 추가</div>
+            <label class="modal-label">마일스톤 이름</label>
+            <input type="text" class="modal-input" id="milestoneName" placeholder="마일스톤 이름">
+            <div class="modal-row">
+                <div class="modal-col">
+                    <label class="modal-label">시작일</label>
+                    <input type="date" class="modal-input" id="milestoneStartDate">
+                </div>
+                <div class="modal-col">
+                    <label class="modal-label">종료일</label>
+                    <input type="date" class="modal-input" id="milestoneEndDate">
+                </div>
+            </div>
+            <label class="modal-label">색상</label>
+            <div class="color-select" id="milestoneColorSelect">
+                <button type="button" class="color-option selected" data-color="#238636" style="background: #238636;"></button>
+                <button type="button" class="color-option" data-color="#1f6feb" style="background: #1f6feb;"></button>
+                <button type="button" class="color-option" data-color="#8957e5" style="background: #8957e5;"></button>
+                <button type="button" class="color-option" data-color="#f85149" style="background: #f85149;"></button>
+                <button type="button" class="color-option" data-color="#d29922" style="background: #d29922;"></button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="milestoneModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="milestoneConfirmBtn">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 태스크 모달 -->
+    <div class="modal-overlay" id="taskModal">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-title" id="taskModalTitle">태스크 추가</div>
+            <label class="modal-label">태스크 이름</label>
+            <input type="text" class="modal-input" id="taskName" placeholder="태스크 이름">
+            <label class="modal-label">마일스톤</label>
+            <select class="modal-input" id="taskMilestone">
+                <!-- 동적으로 생성 -->
+            </select>
+            <label class="modal-label">담당자</label>
+            <select class="modal-input" id="taskAssignee">
+                <!-- 동적으로 생성 -->
+            </select>
+            <div class="modal-row">
+                <div class="modal-col">
+                    <label class="modal-label">시작일</label>
+                    <input type="date" class="modal-input" id="taskStartDate">
+                </div>
+                <div class="modal-col">
+                    <label class="modal-label">종료일</label>
+                    <input type="date" class="modal-input" id="taskEndDate">
+                </div>
+            </div>
+            <label class="modal-label">우선순위</label>
+            <div class="priority-select" id="taskPrioritySelect">
+                <button type="button" class="priority-option" data-priority="low">낮음</button>
+                <button type="button" class="priority-option selected" data-priority="medium">보통</button>
+                <button type="button" class="priority-option" data-priority="high">높음</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="taskModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="taskConfirmBtn">추가</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 팀원 추가 모달 -->
+    <div class="modal-overlay" id="memberModal">
+        <div class="modal">
+            <div class="modal-title">팀원 추가</div>
+            <label class="modal-label">이메일</label>
+            <select class="modal-input" id="memberEmail">
+                <!-- 동적으로 생성 (allowedEmails에서) -->
+            </select>
+            <label class="modal-label">역할</label>
+            <div class="role-select" id="memberRoleSelect">
+                <button type="button" class="role-option" data-role="owner">소유자</button>
+                <button type="button" class="role-option selected" data-role="member">멤버</button>
+                <button type="button" class="role-option" data-role="viewer">뷰어</button>
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="memberModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="memberConfirmBtn">추가</button>
+            </div>
+        </div>
+    </div>
+
+</body>
+</html>
