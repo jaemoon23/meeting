@@ -2,7 +2,7 @@ import './styles/main.css'
 
 import { showLoading, hideLoading } from './utils/helpers.js'
 import { initAuthListener, setAuthStateCallback, getCurrentUser } from './services/auth-service.js'
-import { setupCalendarListener, removeCalendarListener, setEventCallback, createEvent, deleteEvent, getEventsByDate, getEventsByMonth } from './services/calendar-service.js'
+import { setupCalendarListener, removeCalendarListener, setEventCallback, createEvent, deleteEvent, updateEvent, getEventsByDate, getEventsByMonth, getUpcomingEvents } from './services/calendar-service.js'
 import { setupProjectsListener, removeProjectsListener, setProjectCallback, getProjects, getProjectById, getMyAssignedTasks, setupProjectDetailListener, setMilestoneCallback, setTaskCallback, getMilestones, getTasks } from './services/project-service.js'
 import { setupPermissionListener, removePermissionListener, isOwner } from './services/permission-service.js'
 import { setupAllowedEmailsListener, removeAllowedEmailsListener } from './services/allowed-emails-service.js'
@@ -12,6 +12,7 @@ let currentDate = new Date()
 let selectedDate = null
 let allEvents = []
 let selectedProjectId = localStorage.getItem('selectedProjectId') || null
+let currentEditingEvent = null // 현재 수정 중인 일정
 
 // DOM 요소
 const loadingOverlay = document.getElementById('loadingOverlay')
@@ -195,8 +196,29 @@ function showEventDetail(event, dateStr) {
             await deleteEvent(event.id, event.isShared)
             modal.style.display = 'none'
             renderCalendar()
+            renderUpcomingEvents()
         }
     }
+
+    // 수정 버튼 설정
+    const editBtn = document.getElementById('editEventBtn')
+    editBtn.onclick = () => {
+        currentEditingEvent = event
+        openEditEventModal(event)
+        modal.style.display = 'none'
+    }
+
+    modal.style.display = 'flex'
+}
+
+// 일정 수정 모달 열기
+function openEditEventModal(event) {
+    const modal = document.getElementById('eventEditModal')
+
+    document.getElementById('editEventTitle').value = event.title || ''
+    document.getElementById('editEventDate').value = event.date || ''
+    document.getElementById('editEventTime').value = event.time || ''
+    document.getElementById('editEventDescription').value = event.description || ''
 
     modal.style.display = 'flex'
 }
@@ -223,6 +245,64 @@ function openEventModal(dateStr = null) {
     })
 
     modal.style.display = 'flex'
+}
+
+// 다가오는 일정 렌더링
+function renderUpcomingEvents() {
+    const container = document.getElementById('upcomingEventsList')
+    if (!container) return
+
+    const upcomingEvents = getUpcomingEvents(7) // 7일 이내 일정
+
+    if (upcomingEvents.length === 0) {
+        container.innerHTML = '<div class="empty-tasks">다가오는 일정이 없습니다</div>'
+        return
+    }
+
+    container.innerHTML = upcomingEvents.map(event => {
+        const typeClass = event.isShared ? 'shared' : 'personal'
+        const typeText = event.isShared ? '공유' : '개인'
+
+        // D-Day 계산
+        const today = new Date()
+        today.setHours(0, 0, 0, 0)
+        const eventDate = new Date(event.date)
+        eventDate.setHours(0, 0, 0, 0)
+        const diffDays = Math.ceil((eventDate - today) / (1000 * 60 * 60 * 24))
+
+        let dDayText = ''
+        if (diffDays === 0) {
+            dDayText = '오늘'
+        } else if (diffDays === 1) {
+            dDayText = '내일'
+        } else {
+            dDayText = `D-${diffDays}`
+        }
+
+        return `
+            <div class="upcoming-event-item" data-id="${event.id}" data-shared="${event.isShared}" data-date="${event.date}">
+                <div class="event-type ${typeClass}">${typeText}</div>
+                <div class="event-content">
+                    <div class="event-title">${event.title}</div>
+                    <div class="event-date">${event.date} ${event.time || ''}</div>
+                </div>
+                <div class="event-dday ${diffDays === 0 ? 'today' : ''}">${dDayText}</div>
+            </div>
+        `
+    }).join('')
+
+    // 클릭 이벤트 추가
+    container.querySelectorAll('.upcoming-event-item').forEach(item => {
+        item.addEventListener('click', () => {
+            const eventId = item.dataset.id
+            const isShared = item.dataset.shared === 'true'
+            const dateStr = item.dataset.date
+            const event = allEvents.find(e => e.id === eventId)
+            if (event) {
+                showEventDetail(event, dateStr)
+            }
+        })
+    })
 }
 
 // 할당된 태스크 렌더링
@@ -430,6 +510,41 @@ function setupEventListeners() {
         document.getElementById('eventDetailModal').style.display = 'none'
     })
 
+    // 일정 수정 모달 취소
+    document.getElementById('editEventCancelBtn').addEventListener('click', () => {
+        document.getElementById('eventEditModal').style.display = 'none'
+        currentEditingEvent = null
+    })
+
+    // 일정 수정 저장
+    document.getElementById('editEventSaveBtn').addEventListener('click', async () => {
+        if (!currentEditingEvent) return
+
+        const title = document.getElementById('editEventTitle').value.trim()
+        const date = document.getElementById('editEventDate').value
+        const time = document.getElementById('editEventTime').value
+        const description = document.getElementById('editEventDescription').value.trim()
+
+        if (!title || !date) {
+            alert('제목과 날짜를 입력하세요.')
+            return
+        }
+
+        const updatedEvent = {
+            ...currentEditingEvent,
+            title,
+            date,
+            time: time || null,
+            description
+        }
+
+        await updateEvent(currentEditingEvent.id, updatedEvent, currentEditingEvent.isShared)
+        document.getElementById('eventEditModal').style.display = 'none'
+        currentEditingEvent = null
+        renderCalendar()
+        renderUpcomingEvents()
+    })
+
     // 프로젝트 선택
     document.getElementById('projectSelect').addEventListener('change', (e) => {
         selectedProjectId = e.target.value || null
@@ -467,6 +582,7 @@ function initApp() {
     setEventCallback((events) => {
         allEvents = events
         renderCalendar()
+        renderUpcomingEvents()
         hideLoading()
     })
 

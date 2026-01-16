@@ -1807,6 +1807,78 @@ h1 {
     color: #6e7681;
 }
 
+/* 다가오는 일정 */
+.upcoming-events-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.upcoming-event-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    background-color: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.upcoming-event-item:hover {
+    background-color: #161b22;
+    border-color: #388bfd;
+}
+
+.upcoming-event-item .event-type {
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+.upcoming-event-item .event-type.shared {
+    background-color: #238636;
+    color: white;
+}
+
+.upcoming-event-item .event-type.personal {
+    background-color: #8957e5;
+    color: white;
+}
+
+.upcoming-event-item .event-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.upcoming-event-item .event-title {
+    font-size: 14px;
+    color: #c9d1d9;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.upcoming-event-item .event-date {
+    font-size: 12px;
+    color: #8b949e;
+    margin-top: 2px;
+}
+
+.upcoming-event-item .event-dday {
+    font-size: 12px;
+    font-weight: 600;
+    color: #8b949e;
+    white-space: nowrap;
+}
+
+.upcoming-event-item .event-dday.today {
+    color: #f85149;
+}
+
 /* 프로젝트 요약 */
 .project-select {
     padding: 8px 12px;

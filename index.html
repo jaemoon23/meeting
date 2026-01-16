@@ -78,9 +78,18 @@
                     </div>
                 </section>
 
-                <!-- 할당된 일정 -->
+                <!-- 다가오는 일정 + 할당된 일정 -->
                 <section class="dashboard-card tasks-section">
+                    <!-- 다가오는 일정 -->
                     <div class="card-header">
+                        <h2>📆 다가오는 일정</h2>
+                    </div>
+                    <div class="upcoming-events-list" id="upcomingEventsList">
+                        <div class="empty-tasks">다가오는 일정이 없습니다</div>
+                    </div>
+
+                    <!-- 나에게 할당된 일정 -->
+                    <div class="card-header" style="margin-top: 20px; border-top: 1px solid #30363d; padding-top: 20px;">
                         <h2>📌 나에게 할당된 일정</h2>
                     </div>
                     <div class="tasks-list" id="myTasksList">
@@ -142,7 +151,27 @@
             </div>
             <div class="modal-actions">
                 <button class="btn btn-danger" id="deleteEventBtn" style="margin-right: auto;">삭제</button>
+                <button class="btn btn-primary" id="editEventBtn">수정</button>
                 <button class="btn" id="eventDetailCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 일정 수정 모달 -->
+    <div class="modal-overlay" id="eventEditModal">
+        <div class="modal">
+            <div class="modal-title">일정 수정</div>
+            <label class="modal-label">제목</label>
+            <input type="text" class="modal-input" id="editEventTitle" placeholder="일정 제목">
+            <label class="modal-label">날짜</label>
+            <input type="date" class="modal-input" id="editEventDate">
+            <label class="modal-label">시간 (선택)</label>
+            <input type="time" class="modal-input" id="editEventTime">
+            <label class="modal-label">설명 (선택)</label>
+            <textarea class="modal-input" id="editEventDescription" rows="3" placeholder="일정 설명"></textarea>
+            <div class="modal-actions">
+                <button class="btn" id="editEventCancelBtn">취소</button>
+                <button class="btn btn-primary" id="editEventSaveBtn">저장</button>
             </div>
         </div>
     </div>
