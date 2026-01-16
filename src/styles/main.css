@@ -2542,6 +2542,19 @@ h1 {
 .gantt-day {
     min-width: 16px;
     text-align: center;
+    position: relative;
+}
+
+/* 날짜 구분선 */
+.gantt-day::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: 100%;
+    width: 1px;
+    height: 8px;
+    background: #30363d;
+    margin-top: 4px;
 }
 
 .gantt-timeline-body {

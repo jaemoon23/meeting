@@ -298,8 +298,29 @@ function renderGanttChart() {
         currentMonth.setMonth(currentMonth.getMonth() + 1)
     }
 
-    const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1
     const columnWidth = ganttZoom === 'week' ? 200 : ganttZoom === 'month' ? 120 : 80
+
+    // 날짜의 정확한 픽셀 위치 계산 함수
+    function getDatePosition(date) {
+        const d = new Date(date)
+        const year = d.getFullYear()
+        const month = d.getMonth()
+        const day = d.getDate()
+
+        // 해당 날짜가 속한 월 인덱스 찾기
+        const monthIndex = months.findIndex(m => m.year === year && m.month === month)
+        if (monthIndex === -1) {
+            // 범위 밖이면 경계값 반환
+            if (d < minDate) return 0
+            return months.length * columnWidth
+        }
+
+        // 해당 월 내에서의 위치 계산
+        const daysInMonth = months[monthIndex].days.length
+        const positionInMonth = (day - 1) / daysInMonth
+
+        return monthIndex * columnWidth + positionInMonth * columnWidth
+    }
 
     // 태스크 목록 (왼쪽) HTML 생성
     let taskListHtml = `
@@ -345,40 +366,43 @@ function renderGanttChart() {
         taskListHtml += '</div>'
 
         // 타임라인 - 마일스톤 바
-        const msStart = milestone.startDate ? new Date(milestone.startDate) : minDate
-        const msEnd = milestone.endDate ? new Date(milestone.endDate) : maxDate
-        const msStartOffset = Math.max(0, (msStart - minDate) / (1000 * 60 * 60 * 24))
-        const msDuration = Math.max(1, (msEnd - msStart) / (1000 * 60 * 60 * 24) + 1)
-        const msLeft = (msStartOffset / totalDays) * (months.length * columnWidth)
-        const msWidth = (msDuration / totalDays) * (months.length * columnWidth)
+        const msStart = milestone.startDate || minDate.toISOString().split('T')[0]
+        const msEnd = milestone.endDate || maxDate.toISOString().split('T')[0]
+        const msLeft = getDatePosition(msStart)
+        const msRight = getDatePosition(msEnd)
+        const msWidth = Math.max(80, msRight - msLeft + columnWidth / new Date(new Date(msEnd).getFullYear(), new Date(msEnd).getMonth() + 1, 0).getDate())
+
+        // 마일스톤 마커 위치 (종료일 기준)
+        const msMarkerLeft = getDatePosition(msEnd) + columnWidth / new Date(new Date(msEnd).getFullYear(), new Date(msEnd).getMonth() + 1, 0).getDate()
 
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
                 ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
-                <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${Math.max(80, msWidth)}px;">
+                <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${msWidth}px;">
                     ${milestone.title}
                     <div class="gantt-progress-track">
                         <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
                     </div>
                 </div>
-                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msLeft + Math.max(80, msWidth) + 12}px;" title="${milestone.title} 완료"></div>` : ''}
+                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msMarkerLeft}px;" title="${milestone.title} 완료"></div>` : ''}
             </div>
         `
 
         // 타임라인 - 각 태스크 바
         milestoneTasks.forEach(task => {
-            const taskStart = task.startDate ? new Date(task.startDate) : msStart
-            const taskEnd = task.endDate ? new Date(task.endDate) : taskStart
-            const taskStartOffset = Math.max(0, (taskStart - minDate) / (1000 * 60 * 60 * 24))
-            const taskDuration = Math.max(1, (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1)
-            const taskLeft = (taskStartOffset / totalDays) * (months.length * columnWidth)
-            const taskWidth = (taskDuration / totalDays) * (months.length * columnWidth)
+            const taskStartDate = task.startDate || msStart
+            const taskEndDate = task.endDate || taskStartDate
+            const taskLeft = getDatePosition(taskStartDate)
+            const taskRight = getDatePosition(taskEndDate)
+            const endDate = new Date(taskEndDate)
+            const dayWidth = columnWidth / new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate()
+            const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
-                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
@@ -426,18 +450,19 @@ function renderGanttChart() {
         `
 
         orphanTasks.forEach(task => {
-            const taskStart = task.startDate ? new Date(task.startDate) : minDate
-            const taskEnd = task.endDate ? new Date(task.endDate) : taskStart
-            const taskStartOffset = Math.max(0, (taskStart - minDate) / (1000 * 60 * 60 * 24))
-            const taskDuration = Math.max(1, (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1)
-            const taskLeft = (taskStartOffset / totalDays) * (months.length * columnWidth)
-            const taskWidth = (taskDuration / totalDays) * (months.length * columnWidth)
+            const taskStartDate = task.startDate || minDate.toISOString().split('T')[0]
+            const taskEndDate = task.endDate || taskStartDate
+            const taskLeft = getDatePosition(taskStartDate)
+            const taskRight = getDatePosition(taskEndDate)
+            const endDate = new Date(taskEndDate)
+            const dayWidth = columnWidth / new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate()
+            const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
-                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
@@ -455,8 +480,7 @@ function renderGanttChart() {
     today.setHours(0, 0, 0, 0)
     let todayLineHtml = ''
     if (today >= minDate && today <= maxDate) {
-        const todayOffset = (today - minDate) / (1000 * 60 * 60 * 24)
-        const todayLeft = (todayOffset / totalDays) * (months.length * columnWidth)
+        const todayLeft = getDatePosition(today.toISOString().split('T')[0])
         todayLineHtml = `<div class="gantt-today-line" style="left: ${todayLeft}px;"></div>`
     }
 
