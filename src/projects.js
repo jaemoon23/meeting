@@ -236,7 +236,7 @@ function renderGanttChart() {
                 <div class="gantt-empty">
                     <div class="gantt-empty-icon">📊</div>
                     <div class="gantt-empty-text">마일스톤이나 태스크가 없습니다</div>
-                    <button class="btn btn-primary" onclick="document.getElementById('addMilestoneBtn').click()">+ 마일스톤 추가</button>
+                    <button class="btn btn-primary gantt-add-milestone-btn">+ 마일스톤 추가</button>
                 </div>
             </div>
         `
@@ -485,7 +485,7 @@ function renderGanttChart() {
     container.innerHTML = `
         <div class="gantt-card">
             <div class="gantt-toolbar">
-                <button class="btn" onclick="document.getElementById('addMilestoneBtn').click()">
+                <button class="btn gantt-add-milestone-btn">
                     <span>+</span> 마일스톤 추가
                 </button>
                 <div class="gantt-zoom">
@@ -529,6 +529,11 @@ function renderGanttChart() {
             const group = title.closest('.gantt-task-group')
             group.classList.toggle('expanded')
         })
+    })
+
+    // 마일스톤 추가 버튼 이벤트
+    container.querySelectorAll('.gantt-add-milestone-btn').forEach(btn => {
+        btn.addEventListener('click', () => openMilestoneModal())
     })
 }
 
@@ -856,19 +861,6 @@ function setupEventListeners() {
             btn.classList.add('active')
             currentFilter = btn.dataset.filter
             renderProjectList(getProjects())
-        })
-    })
-
-    // 마일스톤 추가
-    document.getElementById('addMilestoneBtn').addEventListener('click', () => openMilestoneModal())
-
-    // 간트 줌
-    document.querySelectorAll('.zoom-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            document.querySelectorAll('.zoom-btn').forEach(b => b.classList.remove('active'))
-            btn.classList.add('active')
-            ganttZoom = btn.dataset.zoom
-            renderGanttChart()
         })
     })
 
