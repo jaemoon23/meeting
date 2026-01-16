@@ -130,10 +130,10 @@ function showMentionDropdown(query, input) {
         return
     }
 
-    // 이름 정보 가져오기
+    // 이름 정보 가져오기 (닉네임 우선)
     const getDisplayName = (email) => {
         const mapping = Object.values(discordMappings).find(m => m.email === email)
-        return mapping?.displayName || email.split('@')[0]
+        return mapping?.discordName || mapping?.displayName || email.split('@')[0]
     }
 
     dropdown.innerHTML = filteredEmails.map((email, index) => `

@@ -691,7 +691,7 @@ function renderTasks() {
                     </select>
                 </span>
                 <span class="col-title">${task.title}</span>
-                <span class="col-assignee">${task.assignee?.name || task.assignee?.email || '-'}</span>
+                <span class="col-assignee">${task.assignee?.email ? (getNicknameByEmail(task.assignee.email) || task.assignee.email) : '-'}</span>
                 <span class="col-date">${task.startDate || '-'} ~ ${task.endDate || '-'}</span>
                 <span class="col-priority"><span class="priority-badge ${priorityClass}">${priorityText}</span></span>
                 <span class="col-actions">
@@ -823,7 +823,8 @@ function openTaskDetailModal(taskId) {
     document.getElementById('taskDetailTitle').textContent = task.title
 
     // 담당자
-    document.getElementById('taskDetailAssignee').textContent = task.assignee?.name || task.assignee?.email || '미지정'
+    const assigneeDisplay = task.assignee?.email ? (getNicknameByEmail(task.assignee.email) || task.assignee.email) : '미지정'
+    document.getElementById('taskDetailAssignee').textContent = assigneeDisplay
 
     // 기간
     const dateText = task.startDate && task.endDate
@@ -973,7 +974,7 @@ function openTaskModal(taskId = null) {
     const members = project?.members || []
     assigneeSelect.innerHTML = `
         <option value="">미지정</option>
-        ${members.map(m => `<option value="${m.email}">${m.name || m.email}</option>`).join('')}
+        ${members.map(m => `<option value="${m.email}">${getNicknameByEmail(m.email) || m.email}</option>`).join('')}
     `
 
     if (taskId) {
@@ -1028,8 +1029,8 @@ function openMemberModal() {
 
     const emailSelect = document.getElementById('memberEmail')
     emailSelect.innerHTML = `
-        <option value="">이메일 선택...</option>
-        ${availableEmails.map(email => `<option value="${email}">${email}</option>`).join('')}
+        <option value="">팀원 선택...</option>
+        ${availableEmails.map(email => `<option value="${email}">${getNicknameByEmail(email) || email}</option>`).join('')}
     `
 
     // 역할 선택 초기화
