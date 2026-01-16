@@ -527,7 +527,17 @@ function renderGanttChart() {
     container.querySelectorAll('.gantt-group-title').forEach(title => {
         title.addEventListener('click', () => {
             const group = title.closest('.gantt-task-group')
-            group.classList.toggle('expanded')
+            const isExpanded = group.classList.toggle('expanded')
+
+            // 타임라인 쪽 행도 함께 숨기기/보이기
+            const taskItems = group.querySelectorAll('.gantt-task-item')
+            taskItems.forEach(item => {
+                const taskId = item.dataset.task
+                const timelineRow = container.querySelector(`.gantt-timeline-row[data-task="${taskId}"]`)
+                if (timelineRow) {
+                    timelineRow.classList.toggle('hidden', !isExpanded)
+                }
+            })
         })
     })
 

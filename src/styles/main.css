@@ -2451,6 +2451,16 @@ h1 {
     transform: rotate(90deg);
 }
 
+/* 그룹이 접혔을 때 태스크 아이템 숨기기 */
+.gantt-task-group:not(.expanded) .gantt-task-item {
+    display: none;
+}
+
+/* 타임라인 행 숨기기 (JS에서 제어) */
+.gantt-timeline-row.hidden {
+    display: none;
+}
+
 .gantt-task-item {
     display: flex;
     align-items: center;
