@@ -4,7 +4,7 @@ import { showLoading, hideLoading } from './utils/helpers.js'
 import { initAuthListener, setAuthStateCallback, getCurrentUser } from './services/auth-service.js'
 import { setupCalendarListener, removeCalendarListener, setEventCallback, createEvent, deleteEvent, getEventsByDate, getEventsByMonth } from './services/calendar-service.js'
 import { setupProjectsListener, removeProjectsListener, setProjectCallback, getProjects, getProjectById, getMyAssignedTasks, setupProjectDetailListener, setMilestoneCallback, setTaskCallback, getMilestones, getTasks } from './services/project-service.js'
-import { setupPermissionListener, removePermissionListener, isAdmin } from './services/permission-service.js'
+import { setupPermissionListener, removePermissionListener, isOwner } from './services/permission-service.js'
 import { setupAllowedEmailsListener, removeAllowedEmailsListener } from './services/allowed-emails-service.js'
 
 // 상태 변수
@@ -36,7 +36,7 @@ function showAppScreen(user) {
     // 관리자 버튼 표시
     const adminBtn = document.getElementById('adminBtn')
     if (adminBtn) {
-        adminBtn.style.display = isAdmin() ? 'inline-flex' : 'none'
+        adminBtn.style.display = isOwner() ? 'inline-flex' : 'none'
     }
 }
 

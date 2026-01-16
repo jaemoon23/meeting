@@ -13,7 +13,7 @@ import {
     addProjectMember, removeProjectMember, updateMemberRole,
     calculateProjectProgress
 } from './services/project-service.js'
-import { setupPermissionListener, removePermissionListener, isAdmin } from './services/permission-service.js'
+import { setupPermissionListener, removePermissionListener, isOwner } from './services/permission-service.js'
 import { setupAllowedEmailsListener, removeAllowedEmailsListener, getAllowedEmails, setAllowedEmailsCallback } from './services/allowed-emails-service.js'
 
 // 상태 변수
@@ -46,7 +46,7 @@ function showAppScreen(user) {
 
     const adminBtn = document.getElementById('adminBtn')
     if (adminBtn) {
-        adminBtn.style.display = isAdmin() ? 'inline-flex' : 'none'
+        adminBtn.style.display = isOwner() ? 'inline-flex' : 'none'
     }
 }
 
