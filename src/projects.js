@@ -24,6 +24,7 @@ let editingProjectId = null
 let editingMilestoneId = null
 let editingTaskId = null
 let ganttZoom = 'month'
+let viewingTaskId = null
 
 // DOM 요소
 const loadingOverlay = document.getElementById('loadingOverlay')
@@ -547,6 +548,27 @@ function renderGanttChart() {
     container.querySelectorAll('.gantt-add-milestone-btn').forEach(btn => {
         btn.addEventListener('click', () => openMilestoneModal())
     })
+
+    // 간트 차트 태스크 바 클릭 이벤트
+    container.querySelectorAll('.gantt-bar.task-bar').forEach(bar => {
+        bar.addEventListener('click', (e) => {
+            e.stopPropagation()
+            const row = bar.closest('.gantt-timeline-row')
+            if (row && row.dataset.task) {
+                openTaskDetailModal(row.dataset.task)
+            }
+        })
+    })
+
+    // 왼쪽 태스크 목록 클릭 이벤트
+    container.querySelectorAll('.gantt-task-item').forEach(item => {
+        item.addEventListener('click', (e) => {
+            e.stopPropagation()
+            if (item.dataset.task) {
+                openTaskDetailModal(item.dataset.task)
+            }
+        })
+    })
 }
 
 // 태스크 탭 렌더링
@@ -614,15 +636,31 @@ function renderTasks() {
 
     // 수정 버튼 이벤트
     body.querySelectorAll('.edit-task-btn').forEach(btn => {
-        btn.addEventListener('click', () => openTaskModal(btn.dataset.id))
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation()
+            openTaskModal(btn.dataset.id)
+        })
     })
 
     // 삭제 버튼 이벤트
     body.querySelectorAll('.delete-task-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation()
             if (confirm('태스크를 삭제하시겠습니까?')) {
                 await deleteTask(currentProjectId, btn.dataset.id)
             }
+        })
+    })
+
+    // 상태 변경 시 버블링 방지
+    body.querySelectorAll('.status-select').forEach(select => {
+        select.addEventListener('click', (e) => e.stopPropagation())
+    })
+
+    // 태스크 행 클릭 시 상세 모달 열기
+    body.querySelectorAll('.task-row').forEach(row => {
+        row.addEventListener('click', () => {
+            openTaskDetailModal(row.dataset.id)
         })
     })
 }
@@ -683,6 +721,66 @@ function renderMembers() {
             }
         })
     })
+}
+
+// 태스크 상세 모달 열기
+function openTaskDetailModal(taskId) {
+    const tasks = getTasks()
+    const task = tasks.find(t => t.id === taskId)
+    if (!task) return
+
+    viewingTaskId = taskId
+    const milestones = getMilestones()
+    const milestone = milestones.find(m => m.id === task.milestoneId)
+
+    // 상태
+    const statusEl = document.getElementById('taskDetailStatus')
+    const statusClass = task.status === 'completed' ? 'completed' : task.status === 'in_progress' ? 'in-progress' : 'pending'
+    const statusText = task.status === 'completed' ? '완료' : task.status === 'in_progress' ? '진행중' : '대기'
+    statusEl.className = `task-detail-status ${statusClass}`
+    statusEl.textContent = statusText
+
+    // 제목
+    document.getElementById('taskDetailTitle').textContent = task.title
+
+    // 담당자
+    document.getElementById('taskDetailAssignee').textContent = task.assignee?.name || task.assignee?.email || '미지정'
+
+    // 기간
+    const dateText = task.startDate && task.endDate
+        ? `${task.startDate} ~ ${task.endDate}`
+        : task.startDate || task.endDate || '미설정'
+    document.getElementById('taskDetailDate').textContent = dateText
+
+    // 우선순위
+    const priorityEl = document.getElementById('taskDetailPriority')
+    const priorityClass = task.priority || 'medium'
+    const priorityText = task.priority === 'high' ? '높음' : task.priority === 'low' ? '낮음' : '보통'
+    priorityEl.innerHTML = `<span class="priority-badge ${priorityClass}">${priorityText}</span>`
+
+    // 마일스톤
+    document.getElementById('taskDetailMilestone').textContent = milestone?.title || '없음'
+
+    // 작업 내용
+    document.getElementById('taskDetailDescription').value = task.description || ''
+
+    // 모달 표시
+    document.getElementById('taskDetailModal').style.display = 'flex'
+}
+
+// 태스크 상세 모달 닫기
+function closeTaskDetailModal() {
+    viewingTaskId = null
+    document.getElementById('taskDetailModal').style.display = 'none'
+}
+
+// 태스크 작업 내용 저장
+async function saveTaskDescription() {
+    if (!viewingTaskId || !currentProjectId) return
+
+    const description = document.getElementById('taskDetailDescription').value
+    await updateTask(currentProjectId, viewingTaskId, { description })
+    alert('저장되었습니다.')
 }
 
 // 프로젝트 모달 열기
@@ -1012,6 +1110,25 @@ function setupEventListeners() {
 
         await addProjectMember(currentProjectId, { email, role })
         document.getElementById('memberModal').style.display = 'none'
+    })
+
+    // 태스크 상세 모달
+    document.getElementById('taskDetailCloseBtn').addEventListener('click', closeTaskDetailModal)
+
+    document.getElementById('taskDetailSaveBtn').addEventListener('click', saveTaskDescription)
+
+    document.getElementById('taskDetailEditBtn').addEventListener('click', () => {
+        if (viewingTaskId) {
+            closeTaskDetailModal()
+            openTaskModal(viewingTaskId)
+        }
+    })
+
+    document.getElementById('taskDetailDeleteBtn').addEventListener('click', async () => {
+        if (viewingTaskId && confirm('태스크를 삭제하시겠습니까?')) {
+            await deleteTask(currentProjectId, viewingTaskId)
+            closeTaskDetailModal()
+        }
     })
 
     // 모달 외부 클릭

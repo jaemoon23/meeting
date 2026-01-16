@@ -277,6 +277,53 @@
         </div>
     </div>
 
+    <!-- 태스크 상세 모달 -->
+    <div class="modal-overlay" id="taskDetailModal">
+        <div class="modal task-detail-modal">
+            <div class="task-detail-header">
+                <div class="task-detail-title-section">
+                    <span class="task-detail-status" id="taskDetailStatus"></span>
+                    <h2 class="task-detail-title" id="taskDetailTitle">태스크 제목</h2>
+                </div>
+                <button class="modal-close-btn" id="taskDetailCloseBtn">×</button>
+            </div>
+
+            <div class="task-detail-body">
+                <div class="task-detail-info">
+                    <div class="task-detail-row">
+                        <span class="task-detail-label">담당자</span>
+                        <span class="task-detail-value" id="taskDetailAssignee">-</span>
+                    </div>
+                    <div class="task-detail-row">
+                        <span class="task-detail-label">기간</span>
+                        <span class="task-detail-value" id="taskDetailDate">-</span>
+                    </div>
+                    <div class="task-detail-row">
+                        <span class="task-detail-label">우선순위</span>
+                        <span class="task-detail-value" id="taskDetailPriority">-</span>
+                    </div>
+                    <div class="task-detail-row">
+                        <span class="task-detail-label">마일스톤</span>
+                        <span class="task-detail-value" id="taskDetailMilestone">-</span>
+                    </div>
+                </div>
+
+                <div class="task-detail-description-section">
+                    <label class="task-detail-label">작업 내용</label>
+                    <textarea class="task-detail-description" id="taskDetailDescription" placeholder="작업 내용을 입력하세요..."></textarea>
+                </div>
+            </div>
+
+            <div class="task-detail-actions">
+                <button class="btn btn-danger" id="taskDetailDeleteBtn">삭제</button>
+                <div class="task-detail-actions-right">
+                    <button class="btn" id="taskDetailEditBtn">수정</button>
+                    <button class="btn btn-primary" id="taskDetailSaveBtn">저장</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script type="module" src="/src/projects.js"></script>
 </body>
 </html>
