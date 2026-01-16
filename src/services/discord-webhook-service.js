@@ -21,8 +21,20 @@ export async function sendMentionNotification(meetingTitle, comment) {
 
     if (!discordMentions) return false
 
+    // 댓글 내용에서 @이메일 제거
+    const cleanContent = comment.content.replace(/@\S+@\S+\.\S+/g, '').trim()
+
     const payload = {
-        content: `${discordMentions} ${comment.content}`
+        content: discordMentions,
+        embeds: [{
+            title: `[${meetingTitle}] 코멘트 할당`,
+            description: cleanContent,
+            color: 0x5865F2,
+            author: {
+                name: comment.authorName || comment.authorEmail
+            },
+            timestamp: new Date().toISOString()
+        }]
     }
 
     try {
