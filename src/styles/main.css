@@ -57,6 +57,7 @@ h1 {
     display: flex;
     gap: 12px;
     flex-wrap: wrap;
+    margin-right: auto;
 }
 
 .btn {
