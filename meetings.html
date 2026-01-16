@@ -28,10 +28,7 @@
     <!-- 메인 앱 -->
     <div class="container app-hidden" id="appContainer">
         <header>
-            <h1>
-                📋 회의록 관리
-                <span class="sync-status" id="syncStatus">연결 중...</span>
-            </h1>
+            <h1>📋 회의록 관리 <span class="sync-status" id="syncStatus">실시간 동기화</span></h1>
             <nav class="main-nav">
                 <a href="./index.html" class="nav-link">대시보드</a>
                 <a href="./meetings.html" class="nav-link active">회의록</a>
@@ -42,18 +39,6 @@
                     <img class="user-avatar" id="userAvatar" src="" alt="User">
                     <span class="user-name" id="userName"></span>
                 </div>
-                <button class="btn" onclick="window.appFunctions.showCategoryModal()">
-                    <span>🏷️</span> 카테고리
-                </button>
-                <button class="btn" onclick="window.appFunctions.showTemplateModal()">
-                    <span>📋</span> 템플릿
-                </button>
-                <button class="btn" onclick="window.appFunctions.showUploadModal()">
-                    <span>📤</span> 업로드
-                </button>
-                <button class="btn" onclick="window.appFunctions.showDiscordSettingsModal()">
-                    <span>⚙️</span> Discord
-                </button>
                 <a href="./admin.html" class="btn btn-admin" id="adminBtn" style="display: none;">
                     <span>👑</span> 관리
                 </a>
@@ -68,6 +53,22 @@
 
         <main class="main-content">
             <aside class="sidebar">
+                <!-- 사이드바 툴바 -->
+                <div class="sidebar-toolbar">
+                    <button class="toolbar-btn" onclick="window.appFunctions.showCategoryModal()" title="카테고리 관리">
+                        <span>🏷️</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="window.appFunctions.showTemplateModal()" title="템플릿">
+                        <span>📋</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="window.appFunctions.showUploadModal()" title="업로드">
+                        <span>📤</span>
+                    </button>
+                    <button class="toolbar-btn" onclick="window.appFunctions.showDiscordSettingsModal()" title="Discord 설정">
+                        <span>💬</span>
+                    </button>
+                </div>
+
                 <!-- 접속자 표시 -->
                 <div class="online-users-box" id="onlineUsersContainer">
                     <!-- 동적으로 생성 -->

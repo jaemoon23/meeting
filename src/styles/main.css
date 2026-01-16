@@ -137,6 +137,33 @@ h1 {
     overflow-y: auto;
 }
 
+.sidebar-toolbar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #30363d;
+}
+
+.toolbar-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background-color: #21262d;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 16px;
+}
+
+.toolbar-btn:hover {
+    background-color: #30363d;
+    border-color: #8b949e;
+}
+
 .sidebar-header {
     display: flex;
     justify-content: space-between;
