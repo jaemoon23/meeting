@@ -350,7 +350,7 @@ function renderGanttChart() {
                         <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
                     </div>
                 </div>
-                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msLeft + msWidth + 8}px;" title="${milestone.title} 완료"></div>` : ''}
+                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msLeft + Math.max(80, msWidth) - 8}px;" title="${milestone.title} 완료"></div>` : ''}
             </div>
         `
 
