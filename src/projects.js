@@ -858,6 +858,20 @@ function initApp() {
     // 프로젝트 콜백
     setProjectCallback((projects) => {
         renderProjectList(projects)
+
+        // 현재 프로젝트 상세 보기 중이면 해당 탭도 업데이트 (실시간 반영)
+        if (currentProjectId) {
+            const project = getProjectById(currentProjectId)
+            if (project) {
+                // 제목 업데이트
+                document.getElementById('projectDetailTitle').textContent = project.title
+
+                // 현재 탭에 따라 업데이트
+                if (currentTab === 'members') renderMembers()
+                if (currentTab === 'overview') renderOverview()
+            }
+        }
+
         hideLoading()
     })
 
