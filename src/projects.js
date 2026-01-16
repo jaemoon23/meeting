@@ -379,16 +379,16 @@ function renderGanttChart() {
         const msStartPos = getDatePosition(msStart)
         const msEndPos = getDatePosition(msEnd)
 
-        // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+        // 바가 날짜 숫자 중앙에 정렬되도록 조정
         let msLeft, msWidth
         if (msStartPos === msEndPos) {
-            // 같은 날: 바를 숫자 중앙에 배치
-            msLeft = msStartPos + dayWidth / 4
+            // 같은 날: 바를 숫자 중앙에 배치 (작은 바)
+            msLeft = msStartPos - dayWidth / 4
             msWidth = dayWidth / 2
         } else {
-            // 다른 날: 시작일 중앙에서 종료일 중앙까지
-            msLeft = msStartPos + dayWidth / 2
-            msWidth = Math.max(dayWidth / 2, msEndPos - msStartPos)
+            // 다른 날: 시작일 셀 왼쪽에서 종료일 셀 오른쪽까지
+            msLeft = msStartPos - dayWidth / 2
+            msWidth = msEndPos - msStartPos + dayWidth
         }
 
         // 텍스트 길이 추정 (글자당 약 8px) + padding 고려
@@ -414,16 +414,16 @@ function renderGanttChart() {
             const taskStartPos = getDatePosition(taskStartDate)
             const taskEndPos = getDatePosition(taskEndDate)
 
-            // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+            // 바가 날짜 숫자 중앙에 정렬되도록 조정
             let taskLeft, taskWidth
             if (taskStartPos === taskEndPos) {
-                // 같은 날: 바를 숫자 중앙에 배치
+                // 같은 날: 바를 숫자 중앙에 배치 (작은 바)
                 taskLeft = taskStartPos - dayWidth / 4
                 taskWidth = dayWidth / 2
             } else {
-                // 다른 날: 시작일 중앙에서 종료일 중앙까지
-                taskLeft = taskStartPos + dayWidth / 2
-                taskWidth = Math.max(dayWidth / 2, taskEndPos - taskStartPos)
+                // 다른 날: 시작일 셀 왼쪽에서 종료일 셀 오른쪽까지
+                taskLeft = taskStartPos - dayWidth / 2
+                taskWidth = taskEndPos - taskStartPos + dayWidth
             }
 
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
@@ -486,16 +486,16 @@ function renderGanttChart() {
             const taskStartPos = getDatePosition(taskStartDate)
             const taskEndPos = getDatePosition(taskEndDate)
 
-            // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+            // 바가 날짜 숫자 중앙에 정렬되도록 조정
             let taskLeft, taskWidth
             if (taskStartPos === taskEndPos) {
-                // 같은 날: 바를 숫자 중앙에 배치
+                // 같은 날: 바를 숫자 중앙에 배치 (작은 바)
                 taskLeft = taskStartPos - dayWidth / 4
                 taskWidth = dayWidth / 2
             } else {
-                // 다른 날: 시작일 중앙에서 종료일 중앙까지
-                taskLeft = taskStartPos + dayWidth / 2
-                taskWidth = Math.max(dayWidth / 2, taskEndPos - taskStartPos)
+                // 다른 날: 시작일 셀 왼쪽에서 종료일 셀 오른쪽까지
+                taskLeft = taskStartPos - dayWidth / 2
+                taskWidth = taskEndPos - taskStartPos + dayWidth
             }
 
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
