@@ -1,7 +1,8 @@
 import { renderMarkdown } from '../lib/marked-config.js'
-import { getMeetingById, updateMeetingContent } from '../services/meeting-service.js'
-import { getCurrentMeetingId } from './meeting-list.js'
+import { getMeetingById, updateMeetingContent, deleteMeeting } from '../services/meeting-service.js'
+import { getCurrentMeetingId, setCurrentMeetingId } from './meeting-list.js'
 import { initCommentsSection, cleanupCommentsSection } from './comments-ui.js'
+import { canDeleteMeetings } from '../services/permission-service.js'
 
 let currentTab = 'preview'
 
@@ -20,6 +21,12 @@ export function showContentView(meeting) {
     document.getElementById('previewPane').innerHTML = renderMarkdown(meeting.content)
     switchTab('preview')
     initCommentsSection(meeting.id)
+
+    // 삭제 버튼 표시 (권한 있을 때만)
+    const deleteBtn = document.getElementById('deleteMeetingBtn')
+    if (deleteBtn) {
+        deleteBtn.style.display = canDeleteMeetings() ? 'inline-block' : 'none'
+    }
 }
 
 export function updateContentView(meeting) {
@@ -86,11 +93,29 @@ export function setupEditor() {
     const editTabBtn = document.getElementById('editTabBtn')
     const saveBtn = document.getElementById('saveBtn')
     const exportBtn = document.getElementById('exportBtn')
+    const deleteBtn = document.getElementById('deleteMeetingBtn')
 
     previewTabBtn.addEventListener('click', () => switchTab('preview'))
     editTabBtn.addEventListener('click', () => switchTab('edit'))
     saveBtn.addEventListener('click', saveCurrentMeeting)
     exportBtn.addEventListener('click', exportMeeting)
+
+    // 삭제 버튼 이벤트
+    deleteBtn?.addEventListener('click', async () => {
+        const currentId = getCurrentMeetingId()
+        if (!currentId) return
+
+        if (!canDeleteMeetings()) {
+            alert('회의록 삭제 권한이 없습니다.')
+            return
+        }
+
+        if (confirm('정말 삭제하시겠습니까? 모든 팀원에게서 삭제됩니다.')) {
+            await deleteMeeting(currentId)
+            setCurrentMeetingId(null)
+            showEmptyState()
+        }
+    })
 
     document.addEventListener('keydown', (e) => {
         if ((e.ctrlKey || e.metaKey) && e.key === 's') {
