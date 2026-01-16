@@ -418,7 +418,7 @@ function renderGanttChart() {
             let taskLeft, taskWidth
             if (taskStartPos === taskEndPos) {
                 // 같은 날: 바를 숫자 중앙에 배치
-                taskLeft = taskStartPos + dayWidth / 4
+                taskLeft = taskStartPos - dayWidth / 4
                 taskWidth = dayWidth / 2
             } else {
                 // 다른 날: 시작일 중앙에서 종료일 중앙까지
@@ -490,7 +490,7 @@ function renderGanttChart() {
             let taskLeft, taskWidth
             if (taskStartPos === taskEndPos) {
                 // 같은 날: 바를 숫자 중앙에 배치
-                taskLeft = taskStartPos + dayWidth / 4
+                taskLeft = taskStartPos - dayWidth / 4
                 taskWidth = dayWidth / 2
             } else {
                 // 다른 날: 시작일 중앙에서 종료일 중앙까지
