@@ -2575,7 +2575,18 @@ h1 {
 }
 
 .gantt-timeline-row.group-row {
-    background: rgba(255, 255, 255, 0.02);
+    /* 그룹 행 배경은 셀에서 그리드 라인과 함께 처리됨 */
+}
+
+.gantt-timeline-row.group-row .gantt-timeline-cell {
+    /* 그룹 행의 셀 배경에 약간 밝은 오버레이 */
+    background: repeating-linear-gradient(
+        to right,
+        rgba(255, 255, 255, 0.02) 0,
+        rgba(255, 255, 255, 0.02) 27px,
+        #30363d 27px,
+        #30363d 28px
+    ), #161b22;
 }
 
 .gantt-timeline-cell {
@@ -2583,8 +2594,16 @@ h1 {
     height: 100%;
     border-right: 1px solid #30363d;
     position: relative;
-    background: #161b22;
     z-index: 0;
+    box-sizing: border-box;
+    /* 일별 세로 그리드 라인 (28px마다) */
+    background: repeating-linear-gradient(
+        to right,
+        #161b22 0,
+        #161b22 27px,
+        #30363d 27px,
+        #30363d 28px
+    );
 }
 
 .gantt-timeline-cell:last-child {
