@@ -20,6 +20,11 @@ export function getDiscordIdByEmail(email) {
     return mapping?.discordId || null
 }
 
+export function getNicknameByEmail(email) {
+    const mapping = Object.values(discordMappings).find(m => m.email === email)
+    return mapping?.discordName || null
+}
+
 export function getDiscordIdByUid(uid) {
     return discordMappings[uid]?.discordId || null
 }

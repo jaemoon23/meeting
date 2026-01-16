@@ -15,6 +15,7 @@ import {
 } from './services/project-service.js'
 import { setupPermissionListener, removePermissionListener, isOwner } from './services/permission-service.js'
 import { setupAllowedEmailsListener, removeAllowedEmailsListener, getAllowedEmails, setAllowedEmailsCallback } from './services/allowed-emails-service.js'
+import { setupDiscordMappingListener, removeDiscordMappingListener, getNicknameByEmail } from './services/discord-mapping-service.js'
 
 // 상태 변수
 let currentProjectId = null
@@ -518,12 +519,12 @@ function renderGanttChart() {
 
     taskListHtml += '</div>'
 
-    // 오늘 표시선 계산
+    // 오늘 표시선 계산 (날짜 숫자 중앙에 위치)
     const today = new Date()
     today.setHours(0, 0, 0, 0)
     let todayLineHtml = ''
     if (today >= minDate && today <= maxDate) {
-        const todayLeft = getDatePosition(today.toISOString().split('T')[0])
+        const todayLeft = getDatePosition(today.toISOString().split('T')[0]) + dayWidth / 2
         todayLineHtml = `<div class="gantt-today-line" style="left: ${todayLeft}px;"></div>`
     }
 
@@ -758,11 +759,14 @@ function renderMembers() {
         const isOwner = member.role === 'owner'
         const isMe = member.uid === user?.uid || member.email === user?.email
         const roleText = member.role === 'owner' ? '소유자' : member.role === 'member' ? '멤버' : '뷰어'
+        // discordMapping에서 닉네임 가져오기
+        const nickname = getNicknameByEmail(member.email)
+        const displayName = nickname || member.name || member.email
 
         return `
             <div class="member-item">
                 <div class="member-info">
-                    <div class="member-name">${member.name || member.email}</div>
+                    <div class="member-name">${displayName}</div>
                     <div class="member-email">${member.email}</div>
                 </div>
                 <div class="member-role">
@@ -1310,6 +1314,7 @@ function initApp() {
             setupProjectsListener()
             setupPermissionListener()
             setupAllowedEmailsListener()
+            setupDiscordMappingListener()
 
             // URL 파라미터 체크
             const params = new URLSearchParams(window.location.search)
@@ -1323,6 +1328,7 @@ function initApp() {
             removeProjectDetailListener()
             removePermissionListener()
             removeAllowedEmailsListener()
+            removeDiscordMappingListener()
             showAuthScreen()
             hideLoading()
         }
