@@ -422,8 +422,9 @@ function renderGanttChart() {
             }
 
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
-            // 바 너비가 작으면(4글자 이하) 텍스트를 바 옆에 표시
-            const showLabelOutside = taskWidth < 60
+            // 텍스트 길이 추정 (글자당 약 8px) + padding 고려
+            const estimatedTextWidth = task.title.length * 8 + 16
+            const showLabelOutside = taskWidth < estimatedTextWidth
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
@@ -493,7 +494,9 @@ function renderGanttChart() {
             }
 
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
-            const showLabelOutside = taskWidth < 60
+            // 텍스트 길이 추정 (글자당 약 8px) + padding 고려
+            const estimatedTextWidth = task.title.length * 8 + 16
+            const showLabelOutside = taskWidth < estimatedTextWidth
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
