@@ -434,7 +434,7 @@ function renderGanttChart() {
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${milestoneColor}dd 0%, ${milestoneColor}bb 100%);">
+                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${milestoneColor} 0%, ${milestoneColor} 100%);">
                         <span class="gantt-bar-label">${task.title}</span>
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
@@ -506,7 +506,7 @@ function renderGanttChart() {
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${orphanColor}dd 0%, ${orphanColor}bb 100%);">
+                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${orphanColor} 0%, ${orphanColor} 100%);">
                         <span class="gantt-bar-label">${task.title}</span>
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
