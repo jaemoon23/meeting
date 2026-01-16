@@ -22,18 +22,7 @@ export async function sendMentionNotification(meetingTitle, comment) {
     if (!discordMentions) return false
 
     const payload = {
-        content: `${discordMentions}`,
-        embeds: [{
-            title: `📝 [${meetingTitle}] 새 댓글 알림`,
-            description: comment.content.length > 200
-                ? comment.content.substring(0, 200) + '...'
-                : comment.content,
-            color: 0x5865F2,
-            author: {
-                name: comment.authorName || comment.authorEmail
-            },
-            timestamp: new Date().toISOString()
-        }]
+        content: `${discordMentions} ${comment.content}`
     }
 
     try {
