@@ -368,14 +368,14 @@ function renderProjectSummaryContent(project) {
 function setupEventListeners() {
     // 로그인 버튼
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-        const { signInWithGoogle } = await import('./services/auth-service.js')
-        await signInWithGoogle()
+        const { loginWithGoogle } = await import('./services/auth-service.js')
+        await loginWithGoogle()
     })
 
     // 로그아웃 버튼
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-        const { signOut } = await import('./services/auth-service.js')
-        await signOut()
+        const { logout } = await import('./services/auth-service.js')
+        await logout()
     })
 
     // 이전/다음 달 버튼

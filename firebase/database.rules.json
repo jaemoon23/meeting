@@ -29,6 +29,38 @@
     "allowedEmails": {
       ".read": true,
       ".write": "auth != null && auth.token.email == '990914s@gmail.com'"
+    },
+    "events": {
+      "shared": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      },
+      "personal": {
+        "$uid": {
+          ".read": "auth != null && auth.uid == $uid",
+          ".write": "auth != null && auth.uid == $uid"
+        }
+      }
+    },
+    "projects": {
+      ".read": "auth != null",
+      ".write": "auth != null"
+    },
+    "milestones": {
+      "$projectId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "tasks": {
+      "$milestoneId": {
+        ".read": "auth != null",
+        ".write": "auth != null"
+      }
+    },
+    "categories": {
+      ".read": "auth != null",
+      ".write": "auth != null"
     }
   }
 }

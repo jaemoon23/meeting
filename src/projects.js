@@ -638,13 +638,13 @@ function openMemberModal() {
 function setupEventListeners() {
     // 로그인/로그아웃
     document.getElementById('googleLoginBtn').addEventListener('click', async () => {
-        const { signInWithGoogle } = await import('./services/auth-service.js')
-        await signInWithGoogle()
+        const { loginWithGoogle } = await import('./services/auth-service.js')
+        await loginWithGoogle()
     })
 
     document.getElementById('logoutBtn').addEventListener('click', async () => {
-        const { signOut } = await import('./services/auth-service.js')
-        await signOut()
+        const { logout } = await import('./services/auth-service.js')
+        await logout()
     })
 
     // 새 프로젝트 버튼
