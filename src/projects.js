@@ -404,7 +404,7 @@ function renderGanttChart() {
             const taskEndDate = task.endDate || taskStartDate
             const taskLeft = getDatePosition(taskStartDate)
             const taskRight = getDatePosition(taskEndDate)
-            const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
+            const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
@@ -462,7 +462,7 @@ function renderGanttChart() {
             const taskEndDate = task.endDate || taskStartDate
             const taskLeft = getDatePosition(taskStartDate)
             const taskRight = getDatePosition(taskEndDate)
-            const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
+            const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
