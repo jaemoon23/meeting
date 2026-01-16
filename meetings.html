@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회의록 관리 (팀 공유)</title>
+</head>
+<body>
+    <!-- 로딩 오버레이 -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">데이터를 불러오는 중...</div>
+    </div>
+
+    <!-- 인증 화면 -->
+    <div class="auth-container" id="authContainer">
+        <div class="auth-box">
+            <div class="auth-icon">📋</div>
+            <h1 class="auth-title">회의록 관리</h1>
+            <p class="auth-subtitle">팀원들과 실시간으로 회의록을 공유하세요</p>
+            <button class="btn btn-google" id="googleLoginBtn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                <span>Google로 로그인</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- 메인 앱 -->
+    <div class="container app-hidden" id="appContainer">
+        <header>
+            <h1>
+                📋 회의록 관리
+                <span class="sync-status" id="syncStatus">연결 중...</span>
+            </h1>
+            <nav class="main-nav">
+                <a href="/index.html" class="nav-link">대시보드</a>
+                <a href="/meetings.html" class="nav-link active">회의록</a>
+                <a href="/projects.html" class="nav-link">프로젝트</a>
+            </nav>
+            <div class="header-actions">
+                <div class="user-info" id="userInfo">
+                    <img class="user-avatar" id="userAvatar" src="" alt="User">
+                    <span class="user-name" id="userName"></span>
+                </div>
+                <button class="btn" onclick="window.appFunctions.showCategoryModal()">
+                    <span>🏷️</span> 카테고리
+                </button>
+                <button class="btn" onclick="window.appFunctions.showTemplateModal()">
+                    <span>📋</span> 템플릿
+                </button>
+                <button class="btn" onclick="window.appFunctions.showUploadModal()">
+                    <span>📤</span> 업로드
+                </button>
+                <button class="btn" onclick="window.appFunctions.showDiscordSettingsModal()">
+                    <span>⚙️</span> Discord
+                </button>
+                <a href="/admin.html" class="btn btn-admin" id="adminBtn" style="display: none;">
+                    <span>👑</span> 관리
+                </a>
+                <button class="btn btn-primary" onclick="window.appFunctions.createNewMeeting()">
+                    <span>➕</span> 새 회의록
+                </button>
+                <button class="btn btn-danger" id="logoutBtn">
+                    <span>🚪</span> 로그아웃
+                </button>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <aside class="sidebar">
+                <!-- 접속자 표시 -->
+                <div class="online-users-box" id="onlineUsersContainer">
+                    <!-- 동적으로 생성 -->
+                </div>
+
+                <!-- 검색 -->
+                <div class="search-box">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" class="search-input" id="searchInput" placeholder="회의록 검색...">
+                    <button class="search-clear" id="searchClear">✕</button>
+                </div>
+
+                <!-- 카테고리 필터 -->
+                <div class="category-filter">
+                    <div class="category-tabs" id="categoryTabs">
+                        <!-- 동적으로 생성 -->
+                    </div>
+                </div>
+
+                <div class="sidebar-header">
+                    <h2>회의록 목록</h2>
+                </div>
+
+                <div id="meetingListContainer">
+                    <!-- 동적으로 생성 -->
+                </div>
+            </aside>
+
+            <section class="content-area">
+                <div id="emptyState" class="empty-state">
+                    <div class="empty-state-icon">📝</div>
+                    <div class="empty-state-text">회의록을 선택하거나 새로 만들어주세요</div>
+                    <div class="empty-state-hint">팀원들과 실시간으로 공유됩니다</div>
+                </div>
+
+                <div id="contentView" style="display: none;">
+                    <div class="content-header">
+                        <div class="content-title-section">
+                            <span class="content-title" id="contentTitle">회의록 제목</span>
+                            <span class="content-category-badge" id="contentCategory">미분류</span>
+                        </div>
+                        <div class="tab-buttons">
+                            <button class="tab-btn active" data-tab="preview" id="previewTabBtn">미리보기</button>
+                            <button class="tab-btn" data-tab="edit" id="editTabBtn">편집</button>
+                            <button class="btn" id="exportBtnHeader" style="margin-left: 12px;">📥 내보내기</button>
+                            <button class="btn btn-danger" id="deleteMeetingBtn" style="display: none;">🗑️ 삭제</button>
+                        </div>
+                    </div>
+                    <div class="content-body">
+                        <div id="previewPane" class="markdown-body">
+                            <!-- 마크다운 렌더링 -->
+                        </div>
+                        <div id="editPane" style="display: none;">
+                            <textarea class="editor-textarea" id="editor" placeholder="마크다운으로 회의록을 작성하세요..."></textarea>
+                            <div style="margin-top: 12px; display: flex; gap: 12px;">
+                                <button class="btn btn-primary" id="saveBtn">💾 저장</button>
+                                <button class="btn" id="exportBtn">📥 내보내기</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 댓글 섹션 -->
+                    <div class="comments-section" id="commentsSection" style="display: none;">
+                        <div class="comments-section-header">
+                            <span>💬</span> 댓글
+                        </div>
+                        <div class="comments-list" id="commentsList">
+                            <!-- 동적으로 생성 -->
+                        </div>
+                        <div class="comment-form">
+                            <input type="text" class="comment-input" id="commentInput" placeholder="댓글을 입력하세요... (@로 멘션)">
+                            <button class="comment-submit-btn" id="commentSubmitBtn">작성</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- 업로드 모달 -->
+    <div class="modal-overlay" id="uploadModal">
+        <div class="modal">
+            <div class="modal-title">마크다운 파일 업로드</div>
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📄</div>
+                <div class="upload-text">클릭하거나 파일을 드래그하세요</div>
+                <div class="upload-hint">.md 파일만 지원됩니다</div>
+            </div>
+            <input type="file" id="fileInput" accept=".md,.markdown,.txt" style="display: none;">
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button class="btn" id="uploadModalCloseBtn">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 새 회의록 모달 -->
+    <div class="modal-overlay" id="newMeetingModal">
+        <div class="modal">
+            <div class="modal-title">새 회의록 만들기</div>
+            <label class="modal-label">제목</label>
+            <input type="text" class="modal-input" id="newMeetingTitle" placeholder="회의록 제목을 입력하세요">
+            <label class="modal-label">카테고리</label>
+            <div class="category-select" id="newMeetingCategorySelect">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="importMeetingBtn">📄 파일에서 가져오기</button>
+                <div style="flex: 1;"></div>
+                <button class="btn" id="newMeetingModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="newMeetingConfirmBtn">만들기</button>
+            </div>
+            <input type="file" id="importMeetingFileInput" accept=".md,.markdown,.txt" style="display: none;">
+        </div>
+    </div>
+
+    <!-- 카테고리 관리 모달 -->
+    <div class="modal-overlay" id="categoryModal">
+        <div class="modal">
+            <div class="modal-title">카테고리 관리</div>
+            <div id="categoryList" style="margin-bottom: 16px;">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div style="display: flex; gap: 8px;">
+                <input type="text" class="modal-input" id="newCategoryInput" placeholder="새 카테고리 이름" style="margin-bottom: 0; flex: 1;">
+                <button class="btn btn-primary" id="addCategoryBtn">추가</button>
+            </div>
+            <div class="modal-actions" style="margin-top: 16px;">
+                <button class="btn" id="categoryModalCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 카테고리 변경 모달 -->
+    <div class="modal-overlay" id="changeCategoryModal">
+        <div class="modal">
+            <div class="modal-title">카테고리 변경</div>
+            <div class="category-select" id="changeCategorySelect">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn" id="changeCategoryModalCloseBtn">취소</button>
+                <button class="btn btn-primary" id="changeCategoryConfirmBtn">변경</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 템플릿 관리 모달 -->
+    <div class="modal-overlay" id="templateModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-title">템플릿 관리</div>
+
+            <div class="template-tabs">
+                <button class="template-tab active" data-template-tab="list" id="templateListTab">템플릿 목록</button>
+                <button class="template-tab" data-template-tab="edit" id="templateEditTab">템플릿 편집</button>
+                <button class="template-tab" data-template-tab="upload" id="templateUploadTab">업로드</button>
+            </div>
+
+            <!-- 템플릿 목록 -->
+            <div id="templateListPane" class="template-pane">
+                <div class="template-list" id="templateList">
+                    <!-- 동적으로 생성 -->
+                </div>
+                <button class="btn btn-primary" style="margin-top: 12px; width: 100%;" id="createNewTemplateBtn">
+                    ➕ 새 템플릿 만들기
+                </button>
+            </div>
+
+            <!-- 템플릿 편집 -->
+            <div id="templateEditPane" class="template-pane" style="display: none;">
+                <input type="text" class="modal-input" id="templateName" placeholder="템플릿 이름">
+                <div id="templateShareToggle" class="template-share-toggle" style="display: none; gap: 8px; align-items: center; margin-bottom: 12px;">
+                    <!-- 동적으로 생성 -->
+                </div>
+                <textarea class="editor-textarea" id="templateEditor" style="min-height: 250px;" placeholder="마크다운 템플릿을 작성하세요..."></textarea>
+                <div class="template-hint">
+                    💡 팁: <code>{{제목}}</code>을 사용하면 회의록 생성 시 입력한 제목으로 자동 치환됩니다.
+                </div>
+                <div style="display: flex; gap: 12px; margin-top: 12px;">
+                    <button class="btn" id="templateBackBtn">← 목록으로</button>
+                    <button class="btn btn-primary" id="saveTemplateBtn">💾 저장</button>
+                    <button class="btn" id="deleteTemplateBtn" style="margin-left: auto; color: #f85149;">🗑️ 삭제</button>
+                </div>
+            </div>
+
+            <!-- 템플릿 업로드 -->
+            <div id="templateUploadPane" class="template-pane" style="display: none;">
+                <div class="upload-area" id="templateUploadArea">
+                    <div class="upload-icon">📄</div>
+                    <div class="upload-text">클릭하거나 파일을 드래그하세요</div>
+                    <div class="upload-hint">.md 파일을 템플릿으로 등록합니다</div>
+                </div>
+                <input type="file" id="templateFileInput" accept=".md,.markdown,.txt" style="display: none;">
+            </div>
+
+            <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid #30363d; padding-top: 16px;">
+                <button class="btn" id="templateModalCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Discord 설정 모달 -->
+    <div class="modal-overlay" id="discordSettingsModal">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-title">Discord 알림 설정</div>
+            <div id="discordSettingsContent">
+                <!-- 동적으로 생성 -->
+            </div>
+            <div class="modal-actions" style="margin-top: 16px; border-top: 1px solid #30363d; padding-top: 16px;">
+                <button class="btn" id="discordSettingsModalCloseBtn">닫기</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+</body>
+</html>
