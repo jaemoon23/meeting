@@ -9,7 +9,8 @@ import {
     getDefaultTemplate,
     createTemplate,
     updateTemplate,
-    deleteTemplate
+    deleteTemplate,
+    setTemplateCallback
 } from '../services/template-service.js'
 import {
     getDiscordMappings,
@@ -340,10 +341,52 @@ async function saveTemplateHandler() {
     }
 
     try {
-        if (editingTemplateId) {
-            await updateTemplate(editingTemplateId, name, content)
-        } else {
+        // 새 템플릿 생성 시 이름 중복 체크
+        if (!editingTemplateId) {
+            const templates = getTemplates()
+            // 같은 저장 위치(공유/개인)에서 중복 체크
+            const duplicateTemplate = templates.find(t =>
+                t.name === name &&
+                t.isShared === isNewTemplateShared &&
+                t.id !== 'default'
+            )
+
+            if (duplicateTemplate) {
+                const replace = confirm(`"${name}" 템플릿이 이미 존재합니다.\n기존 템플릿을 대체하시겠습니까?`)
+                if (replace) {
+                    // 기존 템플릿 대체
+                    await updateTemplate(duplicateTemplate.id, name, content)
+                    switchTemplateTab('list')
+                    alert('템플릿이 대체되었습니다!')
+                    return
+                } else {
+                    // 이름 다시 지정하도록 포커스
+                    document.getElementById('templateName').focus()
+                    document.getElementById('templateName').select()
+                    return
+                }
+            }
+
             await createTemplate(name, content, isNewTemplateShared)
+        } else {
+            // 편집 중일 때도 다른 템플릿과 이름 중복 체크
+            const templates = getTemplates()
+            const editingTemplate = templates.find(t => t.id === editingTemplateId)
+            const duplicateTemplate = templates.find(t =>
+                t.name === name &&
+                t.id !== editingTemplateId &&
+                t.isShared === editingTemplate?.isShared &&
+                t.id !== 'default'
+            )
+
+            if (duplicateTemplate) {
+                alert(`"${name}" 이름의 템플릿이 이미 존재합니다. 다른 이름을 사용해주세요.`)
+                document.getElementById('templateName').focus()
+                document.getElementById('templateName').select()
+                return
+            }
+
+            await updateTemplate(editingTemplateId, name, content)
         }
 
         switchTemplateTab('list')
@@ -378,9 +421,12 @@ function handleTemplateFileSelect(file) {
         const name = file.name.replace(/\.(md|markdown|txt)$/, '')
 
         editingTemplateId = null
+        isNewTemplateShared = true
         document.getElementById('templateName').value = name
         document.getElementById('templateEditor').value = content
         document.getElementById('deleteTemplateBtn').style.display = 'none'
+        updateShareToggle()
+        document.getElementById('templateShareToggle').style.display = 'flex'
         switchTemplateTab('edit')
     }
     reader.readAsText(file)
@@ -590,6 +636,16 @@ function renderAdminUserItem(user) {
 
 // Setup all modals
 export function setupModals() {
+    // 템플릿 실시간 업데이트 콜백 등록
+    setTemplateCallback(() => {
+        // 템플릿 모달이 열려있고, 목록 탭이 활성화된 경우에만 갱신
+        const templateModal = document.getElementById('templateModal')
+        const listPane = document.getElementById('templateListPane')
+        if (templateModal?.classList.contains('show') && listPane?.style.display !== 'none') {
+            renderTemplateList()
+        }
+    })
+
     // Upload Modal
     const uploadArea = document.getElementById('uploadArea')
     const fileInput = document.getElementById('fileInput')
@@ -626,6 +682,8 @@ export function setupModals() {
     const newMeetingModalCloseBtn = document.getElementById('newMeetingModalCloseBtn')
     const newMeetingConfirmBtn = document.getElementById('newMeetingConfirmBtn')
     const newMeetingTitle = document.getElementById('newMeetingTitle')
+    const importMeetingBtn = document.getElementById('importMeetingBtn')
+    const importMeetingFileInput = document.getElementById('importMeetingFileInput')
 
     newMeetingModalCloseBtn.addEventListener('click', hideNewMeetingModal)
     newMeetingConfirmBtn.addEventListener('click', confirmNewMeeting)
@@ -634,6 +692,17 @@ export function setupModals() {
     })
     document.getElementById('newMeetingModal').addEventListener('click', (e) => {
         if (e.target.id === 'newMeetingModal') hideNewMeetingModal()
+    })
+
+    // 파일에서 가져오기
+    importMeetingBtn?.addEventListener('click', () => importMeetingFileInput.click())
+    importMeetingFileInput?.addEventListener('change', (e) => {
+        const file = e.target.files[0]
+        if (file) {
+            hideNewMeetingModal()
+            processFile(file)
+        }
+        e.target.value = ''
     })
 
     // Category Modal

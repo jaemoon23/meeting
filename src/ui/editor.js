@@ -93,12 +93,14 @@ export function setupEditor() {
     const editTabBtn = document.getElementById('editTabBtn')
     const saveBtn = document.getElementById('saveBtn')
     const exportBtn = document.getElementById('exportBtn')
+    const exportBtnHeader = document.getElementById('exportBtnHeader')
     const deleteBtn = document.getElementById('deleteMeetingBtn')
 
     previewTabBtn.addEventListener('click', () => switchTab('preview'))
     editTabBtn.addEventListener('click', () => switchTab('edit'))
     saveBtn.addEventListener('click', saveCurrentMeeting)
     exportBtn.addEventListener('click', exportMeeting)
+    exportBtnHeader?.addEventListener('click', exportMeeting)
 
     // 삭제 버튼 이벤트
     deleteBtn?.addEventListener('click', async () => {
