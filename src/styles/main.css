@@ -2324,121 +2324,428 @@ h1 {
     color: #8b949e;
 }
 
-/* 간트 차트 */
-.gantt-controls {
+/* =========================================
+   새로운 간트 차트 스타일
+   ========================================= */
+
+/* 간트 카드 전체 */
+.gantt-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 16px;
+    overflow: hidden;
+    animation: ganttFadeIn 0.5s ease;
+}
+
+@keyframes ganttFadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* 간트 툴바 */
+.gantt-toolbar {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 20px;
+    padding: 16px 24px;
+    border-bottom: 1px solid #30363d;
 }
 
 .gantt-zoom {
     display: flex;
     gap: 4px;
+    background: #21262d;
+    padding: 4px;
+    border-radius: 8px;
 }
 
 .zoom-btn {
-    padding: 6px 12px;
-    background-color: transparent;
-    border: 1px solid #30363d;
-    border-radius: 4px;
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 500;
     color: #8b949e;
-    font-size: 12px;
     cursor: pointer;
+    transition: all 0.2s ease;
+    border: none;
+    background: transparent;
 }
 
 .zoom-btn:hover {
-    border-color: #8b949e;
+    color: #f0f6fc;
 }
 
 .zoom-btn.active {
-    background-color: #388bfd;
-    border-color: #388bfd;
-    color: #fff;
+    background: #388bfd;
+    color: white;
 }
 
-.gantt-container {
-    overflow-x: auto;
-    padding-bottom: 16px;
+/* 간트 래퍼 (플렉스 컨테이너) */
+.gantt-wrapper {
+    display: flex;
 }
 
-.gantt-chart {
-    position: relative;
-    min-width: 100%;
+/* 왼쪽 태스크 목록 */
+.gantt-task-list {
+    width: 280px;
+    flex-shrink: 0;
+    border-right: 1px solid #30363d;
 }
 
-.gantt-header {
-    position: relative;
-    height: 30px;
-    margin-bottom: 12px;
-    margin-left: 200px;
-}
-
-.gantt-month {
-    position: absolute;
+.gantt-task-header {
+    padding: 12px 20px;
+    background: #21262d;
+    border-bottom: 1px solid #30363d;
     font-size: 12px;
+    font-weight: 600;
     color: #8b949e;
-    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-.gantt-rows {
-    position: relative;
+.gantt-task-group {
+    border-bottom: 1px solid #30363d;
 }
 
-.gantt-row {
+.gantt-task-group:last-child {
+    border-bottom: none;
+}
+
+.gantt-group-title {
     display: flex;
     align-items: center;
-    height: 36px;
+    gap: 10px;
+    padding: 14px 20px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    color: #f0f6fc;
+}
+
+.gantt-group-title:hover {
+    background: #21262d;
+}
+
+.gantt-group-icon {
+    width: 8px;
+    height: 8px;
+    border-radius: 2px;
+}
+
+.gantt-group-icon.blue { background: #58a6ff; }
+.gantt-group-icon.purple { background: #a371f7; }
+.gantt-group-icon.green { background: #3fb950; }
+.gantt-group-icon.orange { background: #d29922; }
+.gantt-group-icon.pink { background: #f778ba; }
+.gantt-group-icon.cyan { background: #39d5ff; }
+
+.gantt-expand-icon {
+    margin-left: auto;
+    color: #6e7681;
+    font-size: 12px;
+    transition: transform 0.2s ease;
+}
+
+.gantt-task-group.expanded .gantt-expand-icon {
+    transform: rotate(90deg);
+}
+
+.gantt-task-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 20px 12px 40px;
+    font-size: 13px;
+    color: #8b949e;
+    border-top: 1px solid #30363d;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.gantt-task-item:hover {
+    background: #21262d;
+    color: #f0f6fc;
+}
+
+.gantt-task-status {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.gantt-task-status.done { background: #3fb950; }
+.gantt-task-status.progress { background: #58a6ff; }
+.gantt-task-status.pending { background: #6e7681; }
+
+/* 오른쪽 타임라인 */
+.gantt-timeline {
+    flex: 1;
+    overflow-x: auto;
+    position: relative;
+}
+
+.gantt-timeline-header {
+    display: flex;
+    background: #21262d;
+    border-bottom: 1px solid #30363d;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.gantt-month-column {
+    flex: 1;
+    min-width: 120px;
+    padding: 12px 16px;
+    text-align: center;
+    border-right: 1px solid #30363d;
+}
+
+.gantt-month-column:last-child {
+    border-right: none;
+}
+
+.gantt-month-year {
+    font-size: 11px;
+    color: #6e7681;
     margin-bottom: 4px;
 }
 
-.gantt-row.milestone .gantt-row-label {
+.gantt-month-name {
+    font-size: 13px;
     font-weight: 600;
     color: #f0f6fc;
 }
 
-.gantt-row.task .gantt-row-label {
-    color: #8b949e;
+.gantt-timeline-body {
+    position: relative;
+    min-height: 200px;
 }
 
-.gantt-row-label {
-    width: 200px;
-    font-size: 13px;
+.gantt-timeline-row {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    border-bottom: 1px solid #30363d;
+    position: relative;
+}
+
+.gantt-timeline-row.group-row {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+.gantt-timeline-cell {
+    flex: 1;
+    min-width: 120px;
+    height: 100%;
+    border-right: 1px solid #30363d;
+    position: relative;
+}
+
+.gantt-timeline-cell:last-child {
+    border-right: none;
+}
+
+/* 간트 바 */
+.gantt-bar {
+    position: absolute;
+    height: 28px;
+    border-radius: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: white;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    padding-right: 16px;
+    animation: ganttBarSlideIn 0.4s ease backwards;
 }
 
-.gantt-row-bar {
+@keyframes ganttBarSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-50%) translateX(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(-50%) translateX(0);
+    }
+}
+
+.gantt-bar:hover {
+    transform: translateY(-50%) scale(1.02);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+}
+
+.gantt-bar.blue {
+    background: linear-gradient(135deg, #58a6ff 0%, #388bfd 100%);
+}
+
+.gantt-bar.purple {
+    background: linear-gradient(135deg, #a371f7 0%, #8957e5 100%);
+}
+
+.gantt-bar.green {
+    background: linear-gradient(135deg, #3fb950 0%, #238636 100%);
+}
+
+.gantt-bar.orange {
+    background: linear-gradient(135deg, #d29922 0%, #bb8009 100%);
+}
+
+.gantt-bar.pink {
+    background: linear-gradient(135deg, #f778ba 0%, #db61a2 100%);
+}
+
+.gantt-bar.cyan {
+    background: linear-gradient(135deg, #39d5ff 0%, #1f9fd9 100%);
+}
+
+.gantt-bar.task-bar {
+    opacity: 0.7;
+}
+
+/* 진행률 표시 */
+.gantt-progress-track {
     position: absolute;
-    left: 200px;
-    height: 24px;
-    border-radius: 4px;
-    background-color: #388bfd;
+    bottom: 4px;
+    left: 4px;
+    right: 4px;
+    height: 3px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 2px;
+    overflow: hidden;
 }
 
-.gantt-row-bar.completed {
-    background-color: #238636;
+.gantt-progress-fill {
+    height: 100%;
+    background: rgba(255, 255, 255, 0.8);
+    border-radius: 2px;
+    transition: width 0.3s ease;
 }
 
-.gantt-row-bar.in-progress {
-    background-color: #d29922;
-}
-
+/* 오늘 표시선 */
 .gantt-today-line {
     position: absolute;
     top: 0;
     bottom: 0;
     width: 2px;
-    background-color: #f85149;
-    margin-left: 200px;
+    background: #f85149;
+    z-index: 5;
+    pointer-events: none;
 }
 
+.gantt-today-line::before {
+    content: '오늘';
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #f85149;
+    background: #161b22;
+    padding: 2px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+/* 마일스톤 마커 (다이아몬드) */
+.gantt-milestone-marker {
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    background: #d29922;
+    transform: translateY(-50%) rotate(45deg);
+    top: 50%;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 8px rgba(210, 153, 34, 0.4);
+}
+
+.gantt-milestone-marker:hover {
+    transform: translateY(-50%) rotate(45deg) scale(1.2);
+}
+
+/* 범례 */
+.gantt-legend {
+    display: flex;
+    gap: 24px;
+    padding: 16px 24px;
+    border-top: 1px solid #30363d;
+    background: #21262d;
+    flex-wrap: wrap;
+}
+
+.gantt-legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #8b949e;
+}
+
+.gantt-legend-color {
+    width: 12px;
+    height: 12px;
+    border-radius: 3px;
+}
+
+.gantt-legend-color.blue { background: #58a6ff; }
+.gantt-legend-color.purple { background: #a371f7; }
+.gantt-legend-color.green { background: #3fb950; }
+.gantt-legend-color.orange { background: #d29922; }
+.gantt-legend-color.pink { background: #f778ba; }
+.gantt-legend-color.cyan { background: #39d5ff; }
+
+.gantt-legend-milestone {
+    width: 10px;
+    height: 10px;
+    background: #d29922;
+    transform: rotate(45deg);
+    border-radius: 2px;
+}
+
+.gantt-legend-today {
+    width: 12px;
+    height: 2px;
+    background: #f85149;
+}
+
+/* 빈 간트 차트 */
 .gantt-empty {
     text-align: center;
-    padding: 40px;
+    padding: 60px 40px;
     color: #8b949e;
+}
+
+.gantt-empty-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    opacity: 0.5;
+}
+
+.gantt-empty-text {
+    font-size: 16px;
+    margin-bottom: 16px;
+}
+
+/* 간트 컨트롤 */
+.gantt-controls {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0;
 }
 
 /* 태스크 테이블 */

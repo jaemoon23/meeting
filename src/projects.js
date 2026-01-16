@@ -226,11 +226,18 @@ function renderGanttChart() {
     const tasks = getTasks()
     const container = document.getElementById('ganttChart')
 
+    // 색상 팔레트
+    const colorPalette = ['blue', 'purple', 'green', 'orange', 'pink', 'cyan']
+
+    // 빈 상태
     if (milestones.length === 0 && tasks.length === 0) {
         container.innerHTML = `
-            <div class="gantt-empty">
-                <p>마일스톤이나 태스크가 없습니다.</p>
-                <button class="btn btn-primary" onclick="document.getElementById('addMilestoneBtn').click()">+ 마일스톤 추가</button>
+            <div class="gantt-card">
+                <div class="gantt-empty">
+                    <div class="gantt-empty-icon">📊</div>
+                    <div class="gantt-empty-text">마일스톤이나 태스크가 없습니다</div>
+                    <button class="btn btn-primary" onclick="document.getElementById('addMilestoneBtn').click()">+ 마일스톤 추가</button>
+                </div>
             </div>
         `
         return
@@ -250,104 +257,279 @@ function renderGanttChart() {
     })
 
     if (allDates.length === 0) {
-        container.innerHTML = '<div class="gantt-empty">날짜 정보가 없습니다.</div>'
+        container.innerHTML = `
+            <div class="gantt-card">
+                <div class="gantt-empty">
+                    <div class="gantt-empty-icon">📅</div>
+                    <div class="gantt-empty-text">날짜 정보가 없습니다</div>
+                </div>
+            </div>
+        `
         return
     }
 
     const minDate = new Date(Math.min(...allDates))
     const maxDate = new Date(Math.max(...allDates))
+
+    // 월 단위로 확장
     minDate.setDate(1)
     maxDate.setMonth(maxDate.getMonth() + 1, 0)
 
-    const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1
-    const dayWidth = ganttZoom === 'week' ? 40 : ganttZoom === 'month' ? 20 : 8
-
-    // 헤더 (날짜)
-    let headerHtml = '<div class="gantt-header">'
-    const current = new Date(minDate)
-    let lastMonth = -1
-
-    while (current <= maxDate) {
-        const month = current.getMonth()
-        if (month !== lastMonth) {
-            headerHtml += `<div class="gantt-month" style="left: ${Math.ceil((current - minDate) / (1000 * 60 * 60 * 24)) * dayWidth}px">${current.getFullYear()}.${month + 1}</div>`
-            lastMonth = month
-        }
-        current.setDate(current.getDate() + 1)
+    // 월 목록 생성
+    const months = []
+    const currentMonth = new Date(minDate)
+    while (currentMonth <= maxDate) {
+        months.push({
+            year: currentMonth.getFullYear(),
+            month: currentMonth.getMonth(),
+            name: `${currentMonth.getMonth() + 1}월`
+        })
+        currentMonth.setMonth(currentMonth.getMonth() + 1)
     }
-    headerHtml += '</div>'
 
-    // 행 (마일스톤 + 태스크)
-    let rowsHtml = '<div class="gantt-rows">'
+    const totalDays = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1
+    const columnWidth = ganttZoom === 'week' ? 200 : ganttZoom === 'month' ? 120 : 80
 
-    milestones.forEach(milestone => {
+    // 태스크 목록 (왼쪽) HTML 생성
+    let taskListHtml = `
+        <div class="gantt-task-list">
+            <div class="gantt-task-header">태스크</div>
+    `
+
+    // 타임라인 행 (오른쪽) HTML 생성
+    let timelineRowsHtml = ''
+
+    // 마일스톤별로 그룹 생성
+    milestones.forEach((milestone, milestoneIndex) => {
         const milestoneTasks = tasks.filter(t => t.milestoneId === milestone.id)
-        const startOffset = milestone.startDate
-            ? Math.ceil((new Date(milestone.startDate) - minDate) / (1000 * 60 * 60 * 24))
-            : 0
-        const duration = milestone.startDate && milestone.endDate
-            ? Math.ceil((new Date(milestone.endDate) - new Date(milestone.startDate)) / (1000 * 60 * 60 * 24)) + 1
-            : 1
+        const colorClass = colorPalette[milestoneIndex % colorPalette.length]
 
-        rowsHtml += `
-            <div class="gantt-row milestone">
-                <div class="gantt-row-label">${milestone.title}</div>
-                <div class="gantt-row-bar" style="left: ${startOffset * dayWidth}px; width: ${duration * dayWidth}px; background: ${milestone.color}"></div>
+        // 마일스톤 진행률 계산
+        const completedTasks = milestoneTasks.filter(t => t.status === 'completed').length
+        const milestoneProgress = milestoneTasks.length > 0
+            ? Math.round((completedTasks / milestoneTasks.length) * 100)
+            : 0
+
+        // 태스크 목록 - 그룹 헤더
+        taskListHtml += `
+            <div class="gantt-task-group expanded" data-milestone="${milestone.id}">
+                <div class="gantt-group-title">
+                    <span class="gantt-group-icon ${colorClass}"></span>
+                    ${milestone.title}
+                    <span class="gantt-expand-icon">▶</span>
+                </div>
+        `
+
+        // 태스크 목록 - 그룹 내 태스크
+        milestoneTasks.forEach(task => {
+            const statusClass = task.status === 'completed' ? 'done' : task.status === 'in_progress' ? 'progress' : 'pending'
+            taskListHtml += `
+                <div class="gantt-task-item" data-task="${task.id}">
+                    <span class="gantt-task-status ${statusClass}"></span>
+                    ${task.title}
+                </div>
+            `
+        })
+
+        taskListHtml += '</div>'
+
+        // 타임라인 - 마일스톤 바
+        const msStart = milestone.startDate ? new Date(milestone.startDate) : minDate
+        const msEnd = milestone.endDate ? new Date(milestone.endDate) : maxDate
+        const msStartOffset = Math.max(0, (msStart - minDate) / (1000 * 60 * 60 * 24))
+        const msDuration = Math.max(1, (msEnd - msStart) / (1000 * 60 * 60 * 24) + 1)
+        const msLeft = (msStartOffset / totalDays) * (months.length * columnWidth)
+        const msWidth = (msDuration / totalDays) * (months.length * columnWidth)
+
+        timelineRowsHtml += `
+            <div class="gantt-timeline-row group-row">
+                ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${Math.max(80, msWidth)}px;">
+                    ${milestone.title}
+                    <div class="gantt-progress-track">
+                        <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
+                    </div>
+                </div>
+                ${milestone.endDate ? `<div class="gantt-milestone-marker" style="left: ${msLeft + msWidth + 8}px;" title="${milestone.title} 완료"></div>` : ''}
             </div>
         `
 
+        // 타임라인 - 각 태스크 바
         milestoneTasks.forEach(task => {
-            const taskStart = task.startDate
-                ? Math.ceil((new Date(task.startDate) - minDate) / (1000 * 60 * 60 * 24))
-                : startOffset
-            const taskDuration = task.startDate && task.endDate
-                ? Math.ceil((new Date(task.endDate) - new Date(task.startDate)) / (1000 * 60 * 60 * 24)) + 1
-                : 1
-            const statusClass = task.status === 'completed' ? 'completed' : task.status === 'in_progress' ? 'in-progress' : ''
+            const taskStart = task.startDate ? new Date(task.startDate) : msStart
+            const taskEnd = task.endDate ? new Date(task.endDate) : taskStart
+            const taskStartOffset = Math.max(0, (taskStart - minDate) / (1000 * 60 * 60 * 24))
+            const taskDuration = Math.max(1, (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1)
+            const taskLeft = (taskStartOffset / totalDays) * (months.length * columnWidth)
+            const taskWidth = (taskDuration / totalDays) * (months.length * columnWidth)
+            const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
-            rowsHtml += `
-                <div class="gantt-row task">
-                    <div class="gantt-row-label">&nbsp;&nbsp;• ${task.title}</div>
-                    <div class="gantt-row-bar ${statusClass}" style="left: ${taskStart * dayWidth}px; width: ${taskDuration * dayWidth}px"></div>
+            timelineRowsHtml += `
+                <div class="gantt-timeline-row" data-task="${task.id}">
+                    ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                        <div class="gantt-progress-track">
+                            <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
+                        </div>
+                    </div>
                 </div>
             `
         })
     })
 
-    // 마일스톤 없는 태스크
+    // 미분류 태스크 (마일스톤 없는)
     const orphanTasks = tasks.filter(t => !t.milestoneId)
     if (orphanTasks.length > 0) {
-        rowsHtml += '<div class="gantt-row section-label"><div class="gantt-row-label">미분류 태스크</div></div>'
-        orphanTasks.forEach(task => {
-            const taskStart = task.startDate
-                ? Math.ceil((new Date(task.startDate) - minDate) / (1000 * 60 * 60 * 24))
-                : 0
-            const taskDuration = task.startDate && task.endDate
-                ? Math.ceil((new Date(task.endDate) - new Date(task.startDate)) / (1000 * 60 * 60 * 24)) + 1
-                : 1
-            const statusClass = task.status === 'completed' ? 'completed' : task.status === 'in_progress' ? 'in-progress' : ''
+        const colorClass = 'orange'
 
-            rowsHtml += `
-                <div class="gantt-row task">
-                    <div class="gantt-row-label">${task.title}</div>
-                    <div class="gantt-row-bar ${statusClass}" style="left: ${taskStart * dayWidth}px; width: ${taskDuration * dayWidth}px"></div>
+        taskListHtml += `
+            <div class="gantt-task-group expanded" data-milestone="orphan">
+                <div class="gantt-group-title">
+                    <span class="gantt-group-icon ${colorClass}"></span>
+                    미분류
+                    <span class="gantt-expand-icon">▶</span>
+                </div>
+        `
+
+        orphanTasks.forEach(task => {
+            const statusClass = task.status === 'completed' ? 'done' : task.status === 'in_progress' ? 'progress' : 'pending'
+            taskListHtml += `
+                <div class="gantt-task-item" data-task="${task.id}">
+                    <span class="gantt-task-status ${statusClass}"></span>
+                    ${task.title}
+                </div>
+            `
+        })
+
+        taskListHtml += '</div>'
+
+        // 미분류 그룹 행
+        timelineRowsHtml += `
+            <div class="gantt-timeline-row group-row">
+                ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                <div class="gantt-bar ${colorClass}" style="left: 20px; width: 80px;">
+                    미분류
+                </div>
+            </div>
+        `
+
+        orphanTasks.forEach(task => {
+            const taskStart = task.startDate ? new Date(task.startDate) : minDate
+            const taskEnd = task.endDate ? new Date(task.endDate) : taskStart
+            const taskStartOffset = Math.max(0, (taskStart - minDate) / (1000 * 60 * 60 * 24))
+            const taskDuration = Math.max(1, (taskEnd - taskStart) / (1000 * 60 * 60 * 24) + 1)
+            const taskLeft = (taskStartOffset / totalDays) * (months.length * columnWidth)
+            const taskWidth = (taskDuration / totalDays) * (months.length * columnWidth)
+            const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
+
+            timelineRowsHtml += `
+                <div class="gantt-timeline-row" data-task="${task.id}">
+                    ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
+                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                        <div class="gantt-progress-track">
+                            <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
+                        </div>
+                    </div>
                 </div>
             `
         })
     }
 
-    rowsHtml += '</div>'
+    taskListHtml += '</div>'
 
-    // 오늘 표시선
+    // 오늘 표시선 계산
     const today = new Date()
-    let todayLine = ''
+    today.setHours(0, 0, 0, 0)
+    let todayLineHtml = ''
     if (today >= minDate && today <= maxDate) {
-        const todayOffset = Math.ceil((today - minDate) / (1000 * 60 * 60 * 24))
-        todayLine = `<div class="gantt-today-line" style="left: ${todayOffset * dayWidth}px"></div>`
+        const todayOffset = (today - minDate) / (1000 * 60 * 60 * 24)
+        const todayLeft = (todayOffset / totalDays) * (months.length * columnWidth)
+        todayLineHtml = `<div class="gantt-today-line" style="left: ${todayLeft}px;"></div>`
     }
 
-    container.innerHTML = headerHtml + rowsHtml + todayLine
-    container.style.width = `${totalDays * dayWidth + 200}px`
+    // 범례 HTML
+    const usedColors = new Set()
+    milestones.forEach((_, i) => usedColors.add(colorPalette[i % colorPalette.length]))
+    if (orphanTasks.length > 0) usedColors.add('orange')
+
+    let legendHtml = '<div class="gantt-legend">'
+    milestones.forEach((milestone, i) => {
+        const colorClass = colorPalette[i % colorPalette.length]
+        legendHtml += `
+            <div class="gantt-legend-item">
+                <span class="gantt-legend-color ${colorClass}"></span>
+                ${milestone.title}
+            </div>
+        `
+    })
+    if (orphanTasks.length > 0) {
+        legendHtml += `
+            <div class="gantt-legend-item">
+                <span class="gantt-legend-color orange"></span>
+                미분류
+            </div>
+        `
+    }
+    legendHtml += `
+        <div class="gantt-legend-item">
+            <span class="gantt-legend-milestone"></span>
+            마일스톤
+        </div>
+        <div class="gantt-legend-item">
+            <span class="gantt-legend-today"></span>
+            오늘
+        </div>
+    </div>`
+
+    // 최종 HTML 조합
+    container.innerHTML = `
+        <div class="gantt-card">
+            <div class="gantt-toolbar">
+                <button class="btn" onclick="document.getElementById('addMilestoneBtn').click()">
+                    <span>+</span> 마일스톤 추가
+                </button>
+                <div class="gantt-zoom">
+                    <button class="zoom-btn ${ganttZoom === 'week' ? 'active' : ''}" data-zoom="week">주</button>
+                    <button class="zoom-btn ${ganttZoom === 'month' ? 'active' : ''}" data-zoom="month">월</button>
+                    <button class="zoom-btn ${ganttZoom === 'quarter' ? 'active' : ''}" data-zoom="quarter">분기</button>
+                </div>
+            </div>
+            <div class="gantt-wrapper">
+                ${taskListHtml}
+                <div class="gantt-timeline">
+                    <div class="gantt-timeline-header">
+                        ${months.map(m => `
+                            <div class="gantt-month-column">
+                                <div class="gantt-month-year">${m.year}</div>
+                                <div class="gantt-month-name">${m.name}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="gantt-timeline-body">
+                        ${todayLineHtml}
+                        ${timelineRowsHtml}
+                    </div>
+                </div>
+            </div>
+            ${legendHtml}
+        </div>
+    `
+
+    // 줌 버튼 이벤트 재설정
+    container.querySelectorAll('.zoom-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            ganttZoom = btn.dataset.zoom
+            renderGanttChart()
+        })
+    })
+
+    // 그룹 접기/펴기 이벤트
+    container.querySelectorAll('.gantt-group-title').forEach(title => {
+        title.addEventListener('click', () => {
+            const group = title.closest('.gantt-task-group')
+            group.classList.toggle('expanded')
+        })
+    })
 }
 
 // 태스크 탭 렌더링
