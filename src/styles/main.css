@@ -703,6 +703,14 @@ h1 {
     border-color: #388bfd;
 }
 
+/* 날짜/시간 input 아이콘 흰색으로 변경 */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator,
+input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+    filter: invert(1);
+    cursor: pointer;
+}
+
 .modal-label {
     display: block;
     font-size: 14px;
