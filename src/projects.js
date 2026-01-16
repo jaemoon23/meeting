@@ -23,7 +23,6 @@ let currentFilter = 'all'
 let editingProjectId = null
 let editingMilestoneId = null
 let editingTaskId = null
-let ganttZoom = 'month'
 let viewingTaskId = null
 
 // DOM 요소
@@ -298,7 +297,16 @@ function renderGanttChart() {
         currentMonth.setMonth(currentMonth.getMonth() + 1)
     }
 
-    const columnWidth = ganttZoom === 'week' ? 200 : ganttZoom === 'month' ? 120 : 80
+    // 날짜당 고정 너비
+    const dayWidth = 28
+
+    // 각 월의 시작 위치 계산
+    let monthStartPositions = []
+    let currentPosition = 0
+    months.forEach((m, i) => {
+        monthStartPositions[i] = currentPosition
+        currentPosition += m.days.length * dayWidth
+    })
 
     // 날짜의 정확한 픽셀 위치 계산 함수
     function getDatePosition(date) {
@@ -312,14 +320,16 @@ function renderGanttChart() {
         if (monthIndex === -1) {
             // 범위 밖이면 경계값 반환
             if (d < minDate) return 0
-            return months.length * columnWidth
+            return currentPosition
         }
 
-        // 해당 월 내에서의 위치 계산
-        const daysInMonth = months[monthIndex].days.length
-        const positionInMonth = (day - 1) / daysInMonth
+        // 해당 월의 시작 위치 + 일수 * dayWidth
+        return monthStartPositions[monthIndex] + (day - 1) * dayWidth
+    }
 
-        return monthIndex * columnWidth + positionInMonth * columnWidth
+    // 각 월의 너비 계산 함수
+    function getMonthWidth(monthObj) {
+        return monthObj.days.length * dayWidth
     }
 
     // 태스크 목록 (왼쪽) HTML 생성
@@ -370,14 +380,14 @@ function renderGanttChart() {
         const msEnd = milestone.endDate || maxDate.toISOString().split('T')[0]
         const msLeft = getDatePosition(msStart)
         const msRight = getDatePosition(msEnd)
-        const msWidth = Math.max(80, msRight - msLeft + columnWidth / new Date(new Date(msEnd).getFullYear(), new Date(msEnd).getMonth() + 1, 0).getDate())
+        const msWidth = Math.max(80, msRight - msLeft + dayWidth)
 
         // 마일스톤 마커 위치 (종료일 기준)
-        const msMarkerLeft = getDatePosition(msEnd) + columnWidth / new Date(new Date(msEnd).getFullYear(), new Date(msEnd).getMonth() + 1, 0).getDate()
+        const msMarkerLeft = getDatePosition(msEnd) + dayWidth
 
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
-                ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
+                ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
                 <div class="gantt-bar ${colorClass}" style="left: ${msLeft}px; width: ${msWidth}px;">
                     ${milestone.title}
                     <div class="gantt-progress-track">
@@ -394,14 +404,12 @@ function renderGanttChart() {
             const taskEndDate = task.endDate || taskStartDate
             const taskLeft = getDatePosition(taskStartDate)
             const taskRight = getDatePosition(taskEndDate)
-            const endDate = new Date(taskEndDate)
-            const dayWidth = columnWidth / new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate()
             const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
-                    ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
+                    ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
@@ -442,7 +450,7 @@ function renderGanttChart() {
         // 미분류 그룹 행
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
-                ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
+                ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
                 <div class="gantt-bar ${colorClass}" style="left: 20px; width: 80px;">
                     미분류
                 </div>
@@ -454,14 +462,12 @@ function renderGanttChart() {
             const taskEndDate = task.endDate || taskStartDate
             const taskLeft = getDatePosition(taskStartDate)
             const taskRight = getDatePosition(taskEndDate)
-            const endDate = new Date(taskEndDate)
-            const dayWidth = columnWidth / new Date(endDate.getFullYear(), endDate.getMonth() + 1, 0).getDate()
             const taskWidth = Math.max(60, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
-                    ${months.map(() => `<div class="gantt-timeline-cell" style="width: ${columnWidth}px; min-width: ${columnWidth}px;"></div>`).join('')}
+                    ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
                         ${task.title}
                         <div class="gantt-progress-track">
@@ -525,35 +531,21 @@ function renderGanttChart() {
                 <button class="btn gantt-add-milestone-btn">
                     <span>+</span> 마일스톤 추가
                 </button>
-                <div class="gantt-zoom">
-                    <button class="zoom-btn ${ganttZoom === 'week' ? 'active' : ''}" data-zoom="week">주</button>
-                    <button class="zoom-btn ${ganttZoom === 'month' ? 'active' : ''}" data-zoom="month">월</button>
-                    <button class="zoom-btn ${ganttZoom === 'quarter' ? 'active' : ''}" data-zoom="quarter">분기</button>
-                </div>
             </div>
             <div class="gantt-wrapper">
                 ${taskListHtml}
                 <div class="gantt-timeline">
                     <div class="gantt-timeline-header">
                         ${months.map(m => {
-                            // 줌 레벨에 따라 표시할 날짜 결정
-                            let daysToShow = []
-                            if (ganttZoom === 'week') {
-                                daysToShow = m.days // 모든 날짜
-                            } else if (ganttZoom === 'month') {
-                                daysToShow = m.days.filter(d => d === 1 || d % 5 === 0) // 1, 5, 10, 15...
-                            } else {
-                                daysToShow = [1, 15] // 분기: 1일, 15일만
-                            }
-                            const daysInMonth = m.days.length
+                            const monthWidth = getMonthWidth(m)
                             return `
-                            <div class="gantt-month-column" style="width: ${columnWidth}px; min-width: ${columnWidth}px;">
+                            <div class="gantt-month-column" style="width: ${monthWidth}px; min-width: ${monthWidth}px;">
                                 <div class="gantt-month-year">${m.year}</div>
                                 <div class="gantt-month-name">${m.name}</div>
                                 <div class="gantt-month-days">
-                                    ${daysToShow.map(d => {
-                                        const leftPercent = ((d - 1) / daysInMonth) * 100
-                                        return `<span class="gantt-day" style="left: ${leftPercent}%">${d}</span>`
+                                    ${m.days.map(d => {
+                                        const leftPos = (d - 1) * dayWidth
+                                        return `<span class="gantt-day" style="left: ${leftPos}px">${d}</span>`
                                     }).join('')}
                                 </div>
                             </div>
@@ -568,14 +560,6 @@ function renderGanttChart() {
             ${legendHtml}
         </div>
     `
-
-    // 줌 버튼 이벤트 재설정
-    container.querySelectorAll('.zoom-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            ganttZoom = btn.dataset.zoom
-            renderGanttChart()
-        })
-    })
 
     // 그룹 접기/펴기 이벤트
     container.querySelectorAll('.gantt-group-title').forEach(title => {
