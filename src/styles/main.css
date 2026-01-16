@@ -2633,7 +2633,7 @@ h1 {
     overflow: hidden;
     text-overflow: ellipsis;
     animation: ganttBarSlideIn 0.4s ease backwards;
-    z-index: 1;
+    z-index: 2;
 }
 
 @keyframes ganttBarSlideIn {
@@ -2706,7 +2706,7 @@ h1 {
     bottom: 0;
     width: 2px;
     background: #f85149;
-    z-index: 5;
+    z-index: 1;
     pointer-events: none;
 }
 
