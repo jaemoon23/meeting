@@ -368,6 +368,7 @@ function renderGanttChart() {
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                        ${task.title}
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
                         </div>
@@ -426,6 +427,7 @@ function renderGanttChart() {
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(() => '<div class="gantt-timeline-cell"></div>').join('')}
                     <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${Math.max(60, taskWidth)}px;">
+                        ${task.title}
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
                         </div>
