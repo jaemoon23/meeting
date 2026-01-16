@@ -97,7 +97,10 @@
                         <div class="discord-webhook-form" id="webhookSection">
                             <label>Discord 웹훅 URL</label>
                             <input type="url" class="admin-input" id="discordWebhookUrl" placeholder="https://discord.com/api/webhooks/...">
-                            <button class="btn btn-primary" id="saveWebhookBtn">저장</button>
+                            <div style="display: flex; gap: 8px;">
+                                <button class="btn btn-primary" id="saveWebhookBtn">저장</button>
+                                <button class="btn" id="testWebhookBtn">테스트 전송</button>
+                            </div>
                         </div>
                         <div class="discord-mapping-list" id="discordMappingList">
                             <!-- 동적으로 생성 -->

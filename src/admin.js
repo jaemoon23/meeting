@@ -29,6 +29,7 @@ import {
 } from './services/permission-service.js'
 import { db } from './lib/firebase.js'
 import { ref, set, onValue, off } from 'firebase/database'
+import { sendTestMessage } from './services/discord-webhook-service.js'
 
 let currentSection = 'discord' // 기본 섹션을 discord로 변경 (모든 사용자 접근 가능)
 let adminConfigRef = null
@@ -477,6 +478,34 @@ function initAdmin() {
 
     // 웹훅 저장 버튼
     document.getElementById('saveWebhookBtn')?.addEventListener('click', saveWebhookUrl)
+
+    // 웹훅 테스트 버튼
+    document.getElementById('testWebhookBtn')?.addEventListener('click', async () => {
+        const webhookUrl = document.getElementById('discordWebhookUrl').value.trim()
+
+        if (!webhookUrl) {
+            alert('웹훅 URL을 먼저 입력해주세요.')
+            return
+        }
+
+        const btn = document.getElementById('testWebhookBtn')
+        btn.disabled = true
+        btn.textContent = '전송 중...'
+
+        try {
+            const success = await sendTestMessage(webhookUrl)
+            if (success) {
+                alert('테스트 메시지가 전송되었습니다! Discord 채널을 확인하세요.')
+            } else {
+                alert('전송에 실패했습니다. 웹훅 URL을 확인해주세요.')
+            }
+        } catch (error) {
+            alert('전송 중 오류가 발생했습니다.')
+        } finally {
+            btn.disabled = false
+            btn.textContent = '테스트 전송'
+        }
+    })
 
     // 사용자 추가 버튼
     document.getElementById('addUserBtn')?.addEventListener('click', handleAddUser)

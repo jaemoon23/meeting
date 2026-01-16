@@ -1,12 +1,14 @@
 import { renderMarkdown } from '../lib/marked-config.js'
 import { getMeetingById, updateMeetingContent } from '../services/meeting-service.js'
 import { getCurrentMeetingId } from './meeting-list.js'
+import { initCommentsSection, cleanupCommentsSection } from './comments-ui.js'
 
 let currentTab = 'preview'
 
 export function showEmptyState() {
     document.getElementById('emptyState').style.display = 'block'
     document.getElementById('contentView').style.display = 'none'
+    cleanupCommentsSection()
 }
 
 export function showContentView(meeting) {
@@ -17,6 +19,7 @@ export function showContentView(meeting) {
     document.getElementById('editor').value = meeting.content
     document.getElementById('previewPane').innerHTML = renderMarkdown(meeting.content)
     switchTab('preview')
+    initCommentsSection(meeting.id)
 }
 
 export function updateContentView(meeting) {
