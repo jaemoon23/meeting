@@ -228,9 +228,6 @@ function renderGanttChart() {
     const tasks = getTasks()
     const container = document.getElementById('ganttChart')
 
-    // 색상 팔레트
-    const colorPalette = ['blue', 'purple', 'green', 'orange', 'pink', 'cyan']
-
     // 빈 상태
     if (milestones.length === 0 && tasks.length === 0) {
         container.innerHTML = `
@@ -342,9 +339,9 @@ function renderGanttChart() {
     let timelineRowsHtml = ''
 
     // 마일스톤별로 그룹 생성
-    milestones.forEach((milestone, milestoneIndex) => {
+    milestones.forEach((milestone) => {
         const milestoneTasks = tasks.filter(t => t.milestoneId === milestone.id)
-        const colorClass = colorPalette[milestoneIndex % colorPalette.length]
+        const milestoneColor = milestone.color || '#238636'
 
         // 마일스톤 진행률 계산
         const completedTasks = milestoneTasks.filter(t => t.status === 'completed').length
@@ -356,7 +353,7 @@ function renderGanttChart() {
         taskListHtml += `
             <div class="gantt-task-group expanded" data-milestone="${milestone.id}">
                 <div class="gantt-group-title">
-                    <span class="gantt-group-icon ${colorClass}"></span>
+                    <span class="gantt-group-icon" style="background: ${milestoneColor};"></span>
                     ${milestone.title}
                     <span class="gantt-expand-icon">▶</span>
                 </div>
@@ -380,13 +377,13 @@ function renderGanttChart() {
         const msEnd = milestone.endDate || maxDate.toISOString().split('T')[0]
         const msLeft = getDatePosition(msStart)
         const msRight = getDatePosition(msEnd)
-        const msWidth = Math.max(80, msRight - msLeft + dayWidth)
+        const msWidth = Math.max(dayWidth, msRight - msLeft + dayWidth)
 
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row" data-milestone="${milestone.id}">
                 ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                <div class="gantt-bar ${colorClass} milestone-bar" style="left: ${msLeft}px; width: ${msWidth}px;">
-                    ${milestone.title}
+                <div class="gantt-bar milestone-bar" style="left: ${msLeft}px; width: ${msWidth}px; background: linear-gradient(135deg, ${milestoneColor} 0%, ${milestoneColor}dd 100%);">
+                    <span class="gantt-bar-label">${milestone.title}</span>
                     <div class="gantt-progress-track">
                         <div class="gantt-progress-fill" style="width: ${milestoneProgress}%;"></div>
                     </div>
@@ -402,12 +399,14 @@ function renderGanttChart() {
             const taskRight = getDatePosition(taskEndDate)
             const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
+            // 바 너비가 작으면(4글자 이하) 텍스트를 바 옆에 표시
+            const showLabelOutside = taskWidth < 60
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
-                        ${task.title}
+                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${milestoneColor}99 0%, ${milestoneColor}77 100%);">
+                        <span class="gantt-bar-label">${task.title}</span>
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
                         </div>
@@ -419,13 +418,12 @@ function renderGanttChart() {
 
     // 미분류 태스크 (마일스톤 없는)
     const orphanTasks = tasks.filter(t => !t.milestoneId)
+    const orphanColor = '#d29922'
     if (orphanTasks.length > 0) {
-        const colorClass = 'orange'
-
         taskListHtml += `
             <div class="gantt-task-group expanded" data-milestone="orphan">
                 <div class="gantt-group-title">
-                    <span class="gantt-group-icon ${colorClass}"></span>
+                    <span class="gantt-group-icon" style="background: ${orphanColor};"></span>
                     미분류
                     <span class="gantt-expand-icon">▶</span>
                 </div>
@@ -447,8 +445,8 @@ function renderGanttChart() {
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row">
                 ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                <div class="gantt-bar ${colorClass}" style="left: 20px; width: 80px;">
-                    미분류
+                <div class="gantt-bar" style="left: 20px; width: 80px; background: linear-gradient(135deg, ${orphanColor} 0%, ${orphanColor}dd 100%);">
+                    <span class="gantt-bar-label">미분류</span>
                 </div>
             </div>
         `
@@ -460,12 +458,13 @@ function renderGanttChart() {
             const taskRight = getDatePosition(taskEndDate)
             const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
+            const showLabelOutside = taskWidth < 60
 
             timelineRowsHtml += `
                 <div class="gantt-timeline-row" data-task="${task.id}">
                     ${months.map(m => `<div class="gantt-timeline-cell" style="width: ${getMonthWidth(m)}px; min-width: ${getMonthWidth(m)}px;"></div>`).join('')}
-                    <div class="gantt-bar ${colorClass} task-bar" style="left: ${taskLeft}px; width: ${taskWidth}px;">
-                        ${task.title}
+                    <div class="gantt-bar task-bar ${showLabelOutside ? 'label-outside' : ''}" style="left: ${taskLeft}px; width: ${taskWidth}px; background: linear-gradient(135deg, ${orphanColor}99 0%, ${orphanColor}77 100%);">
+                        <span class="gantt-bar-label">${task.title}</span>
                         <div class="gantt-progress-track">
                             <div class="gantt-progress-fill" style="width: ${taskProgress}%;"></div>
                         </div>
@@ -487,16 +486,12 @@ function renderGanttChart() {
     }
 
     // 범례 HTML
-    const usedColors = new Set()
-    milestones.forEach((_, i) => usedColors.add(colorPalette[i % colorPalette.length]))
-    if (orphanTasks.length > 0) usedColors.add('orange')
-
     let legendHtml = '<div class="gantt-legend">'
-    milestones.forEach((milestone, i) => {
-        const colorClass = colorPalette[i % colorPalette.length]
+    milestones.forEach((milestone) => {
+        const milestoneColor = milestone.color || '#238636'
         legendHtml += `
             <div class="gantt-legend-item">
-                <span class="gantt-legend-color ${colorClass}"></span>
+                <span class="gantt-legend-color" style="background: ${milestoneColor};"></span>
                 ${milestone.title}
             </div>
         `
@@ -504,16 +499,12 @@ function renderGanttChart() {
     if (orphanTasks.length > 0) {
         legendHtml += `
             <div class="gantt-legend-item">
-                <span class="gantt-legend-color orange"></span>
+                <span class="gantt-legend-color" style="background: ${orphanColor};"></span>
                 미분류
             </div>
         `
     }
     legendHtml += `
-        <div class="gantt-legend-item">
-            <span class="gantt-legend-milestone"></span>
-            마일스톤
-        </div>
         <div class="gantt-legend-item">
             <span class="gantt-legend-today"></span>
             오늘
@@ -907,6 +898,30 @@ function openTaskModal(taskId = null) {
         ${milestones.map(m => `<option value="${m.id}">${m.title}</option>`).join('')}
     `
 
+    // 마일스톤 선택 시 날짜 범위 제한
+    const taskStartDateInput = document.getElementById('taskStartDate')
+    const taskEndDateInput = document.getElementById('taskEndDate')
+
+    function updateDateRangeByMilestone(milestoneId) {
+        if (milestoneId) {
+            const milestone = milestones.find(m => m.id === milestoneId)
+            if (milestone) {
+                taskStartDateInput.min = milestone.startDate || ''
+                taskStartDateInput.max = milestone.endDate || ''
+                taskEndDateInput.min = milestone.startDate || ''
+                taskEndDateInput.max = milestone.endDate || ''
+                return
+            }
+        }
+        // 마일스톤 없으면 제한 해제
+        taskStartDateInput.min = ''
+        taskStartDateInput.max = ''
+        taskEndDateInput.min = ''
+        taskEndDateInput.max = ''
+    }
+
+    milestoneSelect.onchange = () => updateDateRangeByMilestone(milestoneSelect.value)
+
     // 담당자 드롭다운 (프로젝트 멤버)
     const assigneeSelect = document.getElementById('taskAssignee')
     const members = project?.members || []
@@ -928,6 +943,9 @@ function openTaskModal(taskId = null) {
         document.getElementById('taskStartDate').value = task.startDate || ''
         document.getElementById('taskEndDate').value = task.endDate || ''
 
+        // 마일스톤에 따른 날짜 범위 적용
+        updateDateRangeByMilestone(task.milestoneId || '')
+
         // 우선순위 선택
         document.querySelectorAll('#taskPrioritySelect .priority-option').forEach(btn => {
             btn.classList.toggle('selected', btn.dataset.priority === task.priority)
@@ -940,6 +958,9 @@ function openTaskModal(taskId = null) {
         document.getElementById('taskAssignee').value = ''
         document.getElementById('taskStartDate').value = ''
         document.getElementById('taskEndDate').value = ''
+
+        // 날짜 범위 초기화
+        updateDateRangeByMilestone('')
 
         document.querySelectorAll('#taskPrioritySelect .priority-option').forEach(btn => {
             btn.classList.toggle('selected', btn.dataset.priority === 'medium')
