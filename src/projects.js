@@ -375,9 +375,20 @@ function renderGanttChart() {
         // 타임라인 - 마일스톤 바
         const msStart = milestone.startDate || minDate.toISOString().split('T')[0]
         const msEnd = milestone.endDate || maxDate.toISOString().split('T')[0]
-        const msLeft = getDatePosition(msStart)
-        const msRight = getDatePosition(msEnd)
-        const msWidth = Math.max(dayWidth, msRight - msLeft + dayWidth)
+        const msStartPos = getDatePosition(msStart)
+        const msEndPos = getDatePosition(msEnd)
+
+        // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+        let msLeft, msWidth
+        if (msStartPos === msEndPos) {
+            // 같은 날: 바를 숫자 중앙에 배치
+            msLeft = msStartPos + dayWidth / 4
+            msWidth = dayWidth / 2
+        } else {
+            // 다른 날: 시작일 중앙에서 종료일 중앙까지
+            msLeft = msStartPos + dayWidth / 2
+            msWidth = Math.max(dayWidth / 2, msEndPos - msStartPos)
+        }
 
         timelineRowsHtml += `
             <div class="gantt-timeline-row group-row" data-milestone="${milestone.id}">
@@ -395,9 +406,21 @@ function renderGanttChart() {
         milestoneTasks.forEach(task => {
             const taskStartDate = task.startDate || msStart
             const taskEndDate = task.endDate || taskStartDate
-            const taskLeft = getDatePosition(taskStartDate)
-            const taskRight = getDatePosition(taskEndDate)
-            const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
+            const taskStartPos = getDatePosition(taskStartDate)
+            const taskEndPos = getDatePosition(taskEndDate)
+
+            // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+            let taskLeft, taskWidth
+            if (taskStartPos === taskEndPos) {
+                // 같은 날: 바를 숫자 중앙에 배치
+                taskLeft = taskStartPos + dayWidth / 4
+                taskWidth = dayWidth / 2
+            } else {
+                // 다른 날: 시작일 중앙에서 종료일 중앙까지
+                taskLeft = taskStartPos + dayWidth / 2
+                taskWidth = Math.max(dayWidth / 2, taskEndPos - taskStartPos)
+            }
+
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
             // 바 너비가 작으면(4글자 이하) 텍스트를 바 옆에 표시
             const showLabelOutside = taskWidth < 60
@@ -454,9 +477,21 @@ function renderGanttChart() {
         orphanTasks.forEach(task => {
             const taskStartDate = task.startDate || minDate.toISOString().split('T')[0]
             const taskEndDate = task.endDate || taskStartDate
-            const taskLeft = getDatePosition(taskStartDate)
-            const taskRight = getDatePosition(taskEndDate)
-            const taskWidth = Math.max(dayWidth, taskRight - taskLeft + dayWidth)
+            const taskStartPos = getDatePosition(taskStartDate)
+            const taskEndPos = getDatePosition(taskEndDate)
+
+            // 바가 날짜 숫자 중앙에서 시작하고 끝나도록 조정
+            let taskLeft, taskWidth
+            if (taskStartPos === taskEndPos) {
+                // 같은 날: 바를 숫자 중앙에 배치
+                taskLeft = taskStartPos + dayWidth / 4
+                taskWidth = dayWidth / 2
+            } else {
+                // 다른 날: 시작일 중앙에서 종료일 중앙까지
+                taskLeft = taskStartPos + dayWidth / 2
+                taskWidth = Math.max(dayWidth / 2, taskEndPos - taskStartPos)
+            }
+
             const taskProgress = task.status === 'completed' ? 100 : task.status === 'in_progress' ? 50 : 0
             const showLabelOutside = taskWidth < 60
 
