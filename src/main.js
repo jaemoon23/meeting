@@ -90,6 +90,20 @@ function initApp() {
         renderMeetingList()
         hideLoading()
 
+        // URL 파라미터에서 회의록 ID 확인 (Discord 알림 링크 등)
+        const urlParams = new URLSearchParams(window.location.search)
+        const meetingIdFromUrl = urlParams.get('id')
+
+        if (meetingIdFromUrl && !getCurrentMeetingId()) {
+            const meetingFromUrl = meetings.find(m => m.id === meetingIdFromUrl)
+            if (meetingFromUrl) {
+                showContentView(meetingFromUrl)
+                // URL 파라미터 제거 (히스토리 정리)
+                window.history.replaceState({}, '', window.location.pathname)
+                return
+            }
+        }
+
         // 현재 선택된 회의록 업데이트
         const currentId = getCurrentMeetingId()
         if (currentId) {
