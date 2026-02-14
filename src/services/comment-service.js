@@ -80,12 +80,12 @@ export async function createComment(meetingId, content) {
     const meeting = getMeetingById(meetingId)
     const meetingTitle = meeting?.title || '회의록'
 
-    // Discord 알림 전송 - 일반 댓글 알림
-    sendCommentNotification(meetingTitle, commentData)
+    // Discord 알림 전송 - 일반 댓글 알림 (meetingId 포함)
+    sendCommentNotification(meetingTitle, commentData, meetingId)
 
-    // Discord 알림 전송 - 멘션 알림 (멘션이 있는 경우)
+    // Discord 알림 전송 - 멘션 알림 (멘션이 있는 경우, meetingId 포함)
     if (mentions.some(m => m.discordId)) {
-        sendMentionNotification(meetingTitle, commentData)
+        sendMentionNotification(meetingTitle, commentData, meetingId)
     }
 
     return newCommentRef.key

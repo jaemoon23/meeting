@@ -2,6 +2,9 @@ import { db } from '../lib/firebase.js'
 import { ref, get, onValue, off } from 'firebase/database'
 import { getDiscordIdByEmail } from './discord-mapping-service.js'
 
+// 사이트 기본 URL
+const BASE_URL = 'https://jaemoon23.github.io/meeting'
+
 // 웹훅 설정 캐시
 let webhookConfig = {
     meeting: { url: '', options: {} },
@@ -72,16 +75,19 @@ export function isOptionEnabled(type, option) {
 // ============================================
 
 // 새 회의록 생성 알림
-export async function sendNewMeetingNotification(meeting, author) {
+export async function sendNewMeetingNotification(meeting, author, meetingId) {
     await ensureWebhookConfig()
     if (!isOptionEnabled('meeting', 'newMeeting')) return false
 
     const webhookUrl = getWebhookUrl('meeting')
     if (!webhookUrl) return false
 
+    const meetingUrl = meetingId ? `${BASE_URL}/meetings.html?id=${meetingId}` : `${BASE_URL}/meetings.html`
+
     const payload = {
         embeds: [{
             title: '📝 새 회의록 생성',
+            url: meetingUrl,
             description: meeting.title,
             color: 0x238636,
             fields: [
@@ -96,7 +102,7 @@ export async function sendNewMeetingNotification(meeting, author) {
 }
 
 // 댓글 작성 알림
-export async function sendCommentNotification(meetingTitle, comment) {
+export async function sendCommentNotification(meetingTitle, comment, meetingId) {
     await ensureWebhookConfig()
     if (!isOptionEnabled('meeting', 'comment')) return false
 
@@ -106,9 +112,12 @@ export async function sendCommentNotification(meetingTitle, comment) {
     // 댓글 내용에서 @이메일 제거
     const cleanContent = comment.content.replace(/@\S+@\S+\.\S+/g, '').trim()
 
+    const meetingUrl = meetingId ? `${BASE_URL}/meetings.html?id=${meetingId}` : `${BASE_URL}/meetings.html`
+
     const payload = {
         embeds: [{
             title: `💬 [${meetingTitle}] 새 댓글`,
+            url: meetingUrl,
             description: cleanContent.substring(0, 500),
             color: 0x388bfd,
             author: {
@@ -122,7 +131,7 @@ export async function sendCommentNotification(meetingTitle, comment) {
 }
 
 // 멘션 알림 전송
-export async function sendMentionNotification(meetingTitle, comment) {
+export async function sendMentionNotification(meetingTitle, comment, meetingId) {
     await ensureWebhookConfig()
     if (!isOptionEnabled('meeting', 'mention')) return false
 
@@ -139,10 +148,13 @@ export async function sendMentionNotification(meetingTitle, comment) {
     // 댓글 내용에서 @이메일 제거
     const cleanContent = comment.content.replace(/@\S+@\S+\.\S+/g, '').trim()
 
+    const meetingUrl = meetingId ? `${BASE_URL}/meetings.html?id=${meetingId}` : `${BASE_URL}/meetings.html`
+
     const payload = {
         content: discordMentions,
         embeds: [{
             title: `🔔 [${meetingTitle}] 멘션 알림`,
+            url: meetingUrl,
             description: cleanContent.substring(0, 500),
             color: 0x5865F2,
             author: {
@@ -166,6 +178,7 @@ export async function sendMeetingDeleteNotification(meeting, deletedBy) {
     const payload = {
         embeds: [{
             title: '🗑️ 회의록 삭제',
+            url: `${BASE_URL}/meetings.html`,
             description: meeting.title,
             color: 0xda3633,
             fields: [
@@ -193,6 +206,7 @@ export async function sendNewEventNotification(event) {
     const payload = {
         embeds: [{
             title: '📅 새 공유 일정',
+            url: `${BASE_URL}/index.html`,
             description: event.title,
             color: 0x238636,
             fields: [
@@ -218,6 +232,7 @@ export async function sendEventEditNotification(event, editedBy) {
     const payload = {
         embeds: [{
             title: '✏️ 일정 수정',
+            url: `${BASE_URL}/index.html`,
             description: event.title,
             color: 0xffa500,
             fields: [
@@ -242,6 +257,7 @@ export async function sendEventDeleteNotification(event, deletedBy) {
     const payload = {
         embeds: [{
             title: '🗑️ 일정 삭제',
+            url: `${BASE_URL}/index.html`,
             description: event.title,
             color: 0xda3633,
             fields: [
@@ -259,16 +275,19 @@ export async function sendEventDeleteNotification(event, deletedBy) {
 // ============================================
 
 // 새 프로젝트 생성 알림
-export async function sendNewProjectNotification(project) {
+export async function sendNewProjectNotification(project, projectId) {
     await ensureWebhookConfig()
     if (!isOptionEnabled('project', 'newProject')) return false
 
     const webhookUrl = getWebhookUrl('project')
     if (!webhookUrl) return false
 
+    const projectUrl = projectId ? `${BASE_URL}/projects.html?id=${projectId}` : `${BASE_URL}/projects.html`
+
     const payload = {
         embeds: [{
             title: '🚀 새 프로젝트 생성',
+            url: projectUrl,
             description: project.title,
             color: 0x238636,
             fields: [
@@ -290,9 +309,12 @@ export async function sendMilestoneCompleteNotification(project, milestone) {
     const webhookUrl = getWebhookUrl('project')
     if (!webhookUrl) return false
 
+    const projectUrl = project.id ? `${BASE_URL}/projects.html?id=${project.id}` : `${BASE_URL}/projects.html`
+
     const payload = {
         embeds: [{
             title: '🎯 마일스톤 완료',
+            url: projectUrl,
             description: milestone.title,
             color: 0x00D166,
             fields: [
@@ -317,10 +339,13 @@ export async function sendTaskAssignNotification(project, task, assignee) {
     const discordId = getDiscordIdByEmail(assignee.email)
     const mention = discordId ? `<@${discordId}>` : ''
 
+    const projectUrl = project.id ? `${BASE_URL}/projects.html?id=${project.id}` : `${BASE_URL}/projects.html`
+
     const payload = {
         content: mention || undefined,
         embeds: [{
             title: '📋 태스크 할당',
+            url: projectUrl,
             description: task.title,
             color: 0x388bfd,
             fields: [
@@ -343,9 +368,12 @@ export async function sendTaskCompleteNotification(project, task, completedBy) {
     const webhookUrl = getWebhookUrl('project')
     if (!webhookUrl) return false
 
+    const projectUrl = project.id ? `${BASE_URL}/projects.html?id=${project.id}` : `${BASE_URL}/projects.html`
+
     const payload = {
         embeds: [{
             title: '✅ 태스크 완료',
+            url: projectUrl,
             description: task.title,
             color: 0x00D166,
             fields: [

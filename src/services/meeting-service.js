@@ -63,8 +63,8 @@ export async function createMeeting(title, content, category) {
 
         await set(newMeetingRef, meetingData)
 
-        // Discord 웹훅 알림 전송
-        sendNewMeetingNotification(meetingData, user?.displayName || user?.email || '알 수 없음')
+        // Discord 웹훅 알림 전송 (meetingId 포함)
+        sendNewMeetingNotification(meetingData, user?.displayName || user?.email || '알 수 없음', newMeetingRef.key)
 
         return newMeetingRef.key
     } catch (error) {

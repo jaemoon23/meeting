@@ -146,8 +146,8 @@ export async function createProject(projectData) {
 
     await set(newProjectRef, project)
 
-    // Discord 웹훅 알림 전송
-    sendNewProjectNotification(project)
+    // Discord 웹훅 알림 전송 (projectId 포함)
+    sendNewProjectNotification(project, newProjectRef.key)
 
     return newProjectRef.key
 }
